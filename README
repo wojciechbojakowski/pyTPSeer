@@ -1,0 +1,81 @@
+# pyTPSeer
+
+A dedicated data analysis software package designed for Thomson Parabola Spectrometers (TPS). The application enables visualization of measurement spectra, spatial scale calibration, ion trace (parabola) simulation overlays.
+
+This project is Python port of software originally built using C++/Qt and the CERN ROOT library.
+
+---
+
+## 📁 Project Structure
+
+The application is built using a modular architecture that separates scientific/computational logic from the graphical user interface:
+
+* `main.py` – The main entry point of the application.
+* `config.py` – Global physical constants of the apparatus (e.g., px/mm calibration factor) and GUI styling configs.
+* `core/` – Computational backend (handling `.tif` file loading, advanced mathematics, and parabola fitting calculations).
+* `gui/` – User interface components built with CustomTkinter, hosting embedded Matplotlib plots (`main_window.py`, `sidebar.py`, `plot_canvas.py`, `settings_window.py`).
+* `env/` – Local Python virtual environment isolating all project dependencies.
+
+---
+
+## 🛠️ Deployment & Installation (Lab Workstation Guide)
+
+The application utilizes an isolated virtual environment, ensuring that installation does not interfere with global system settings or other software.
+
+### 1. Open the Project Directory
+Open your terminal (or Command Prompt / PowerShell on Windows) and navigate to the project directory:
+```bash
+cd /path/to/folder/pyTPSeer
+
+```
+
+### 2. Activate the Virtual Environment
+
+The repository already includes a pre-configured `env` directory. Activate it depending on your operating system:
+
+* **Windows (PowerShell):**
+```powershell
+.\env\Scripts\Activate.ps1
+
+```
+
+
+* **Windows (Command Prompt - CMD):**
+```cmd
+.\env\Scripts\activate.bat
+
+```
+
+
+* **Linux / macOS:**
+```bash
+source env/bin/activate
+
+```
+
+*Once successfully activated, the terminal prompt will be prefixed with `(env)`.*
+
+### 3. Install Dependencies
+
+If setting up the software on a new laboratory computer, install all required engineering libraries using the `requirements.txt` file:
+
+```bash
+pip install -r requirements.txt
+
+```
+
+---
+
+## 🚀 Running the Application
+
+With the virtual environment `(env)` activated, execute the main script:
+
+```bash
+python main.py
+
+```
+---
+
+## ⚙️ Modifying Physical Parameters
+
+Core constants (such as the default detection grid resolution `pixels_per_mm`) can be adjusted dynamically during runtime via the "Scale Settings" window within the GUI, or permanently changed by editing the `config.py` file.
