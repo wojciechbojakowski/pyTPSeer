@@ -10,3 +10,5 @@ NAME = "TPS analizer"
 
 
 DPI = 200
+
+LEGENCY_LOOK = 0
