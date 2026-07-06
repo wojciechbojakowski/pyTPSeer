@@ -58,30 +58,12 @@ class SidebarFrame(ctk.CTkFrame):
         )
         self.lbl_start_coords.pack(pady=2)
 
-        self.sep = ctk.CTkLabel(self.result_frame, text="-----------------------------------", text_color="gray")
-        self.sep.pack(pady=5)
+        lbl = ctk.CTkLabel(self.result_frame, text="Rotation: ", font=ctk.CTkFont(size=11))
+        lbl.pack(side="left", anchor="w")
 
-        self.lbl_info = ctk.CTkLabel(
-            self.result_frame, 
-            text="[ (TEST function) current point ]", 
-            font=ctk.CTkFont(size=12, weight="bold")
-        )
-        self.lbl_info.pack(pady=2)
+        self.entry = ctk.CTkEntry(self.result_frame, width=120, height=24)
+        self.entry.pack(side="right", anchor="e")
         
-        self.lbl_coords = ctk.CTkLabel(
-            self.result_frame, 
-            text="X: --- , Y: ---", 
-            font=ctk.CTkFont(size=14)
-        )
-        self.lbl_coords.pack(pady=2)
-        
-        self.lbl_value = ctk.CTkLabel(
-            self.result_frame, 
-            text="Value: ---", 
-            font=ctk.CTkFont(size=14, weight="bold")
-        )
-        self.lbl_value.pack(pady=2)
-
         self.lbl_status = ctk.CTkLabel(
             self, 
             text="No file loaded", 
@@ -106,14 +88,8 @@ class SidebarFrame(ctk.CTkFrame):
 
     def update_current_point_labels(self, x_m, y_m, value):
         """Updates the labels for the newly clicked point"""
-        self.lbl_coords.configure(text=f"X: {x_m:.5f} m\nY: {y_m:.5f} m")
-        self.lbl_value.configure(text=f"Value: {value:.4f}")
-
-    def reset_ui_labels(self):
-        """Restores the initial state of the labels (e.g., after loading a new TIF file)"""
-        self.lbl_start_coords.configure(text="X: --- , Y: --- (Value: ---)")
-        self.lbl_coords.configure(text="X: --- , Y: ---")
-        self.lbl_value.configure(text="Value: ---")
+        #self.lbl_coords.configure(text=f"X: {x_m:.5f} m\nY: {y_m:.5f} m")
+        #self.lbl_value.configure(text=f"Value: {value:.4f}")
 
     def set_status(self, text):
         """Sets the informational text at the bottom of the sidebar"""

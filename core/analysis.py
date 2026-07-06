@@ -123,3 +123,64 @@ def _particle_pusher(E, E_field, mIon, q, Zm1, Zm2, Ze1, Ze2, Zd, Ae, Be, B, Max
         y_ret[j] = y_E
 
     return x_ret, y_ret
+
+
+def PSL_from_grey(grey01):
+    """Converts a 16-bit grayscale value to PSL (Photo-Stimulated Luminescence) units based on the formula from the original code. LINE #1468"""
+    return (25.0/100.0)*(25.0/100.0)*10.0**(5.0*(grey01/65534-0.5))
+
+def PSL_Scaling(EMeV, mass):
+    if(mass == 1.0):
+        if(EMeV < 1.6):
+            return 0.151 * EMeV**0.6
+        return 0.284*EMeV**-0.75
+
+    if(mass == 12.0):
+        if(EMeV <= 73.6):
+            return(
+                    2.51e-3
+                    +
+                    4.56e-4*EMeV
+                    -
+                    8.9e-6*EMeV*EMeV
+                    +
+                    4.61e-8*EMeV*EMeV*EMeV
+                )*EMeV
+        return 4.55*EMeV**(-0.533)
+    return 1.0
+
+def traceHalfWidthPx(EMeV, d_pinhole):
+    broadening = config.Eref/np.max(EMeV,0.1)**config.widthAlpha
+    pinholePx = meter_to_pixel(d_pinhole*0.001)
+    w = 0.5*pinholePx*(1.0+ broadening*config.widthGain)
+    return np.clip(w, 2.0, 120.0)
+
+def inside(px, py, x_pixels, y_pixels):
+    return (0 <= px < x_pixels) and (0 <= py < y_pixels)
+
+def filter_inside_points(px_array, py_array, x_pixels, y_pixels):
+    mask = (px_array >= 0) & (px_array < x_pixels) & (py_array >= 0) & (py_array < y_pixels)
+    return mask
+
+@njit(fastmath=True)
+def Energy_Graph(Ep, x, y, mass, d_phole, slice_Length = config.sliceLength , pixels_per_m=config.PX_TO_METER, pts_max = config.MAX_PTS):
+    max_E = 0.0
+    for i in range(pts_max):
+        EMeV = Ep[i] / mass
+        if(EMeV > max_E):
+            max_E = EMeV
+        dx = (x[i+1] - x[i-1])*pixels_per_m
+        dy =(y[i+1] - y[i-1])*pixels_per_m
+        norm = np.hypot(dx,dy)
+
+        if(norm < 1e-12):
+            continue
+
+        nx = -dy / norm
+        ny = dx / norm
+
+        halfW = traceHalfWidthPx(EMeV, d_pinhole=d_phole)
+        sliceHalfWidth = int(np.ceil(halfW))
+
+        signalPSL = 0.0
+        signalN = 0

@@ -52,7 +52,6 @@ class MainWindow(ctk.CTk):
         if img is not None:
             self.img_norm = img
             self.start_point = None
-            self.sidebar.reset_ui_labels()
             self.sidebar.set_status(f"Plik: {path.split('/')[-1]}")
             self.refresh_interface()
         else:
@@ -139,5 +138,7 @@ class MainWindow(ctk.CTk):
             sampling_mode="Quadratic"
         )
 
-        self.plot_frame.ax.plot(x, y, 'r-', linewidth=1.5, label='Parabola')
+        line, = self.plot_frame.ax.plot(x, y, 'm-', linewidth=1, label='Parabola')
+        number_of_points = len(line.get_xdata())
+        print(f"The plotted line has {number_of_points} points.")
         self.plot_frame.canvas.draw()

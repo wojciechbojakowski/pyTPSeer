@@ -6,8 +6,8 @@ M_ION = 1.67e-27  # kg, mass of a proton (ion)
 Q_ION = 1.60217662e-19  # C, charge of a proton (ion)
 MeV_TO_J = 1.6e-13  # Conversion factor from MeV to Joules
 
-MAX_PTS = 50
-MAX_Time_points = 10
+MAX_PTS = 5000
+MAX_Time_points = 1000
 
 # GUI settings
 APPEARANCE_MODE = "System"
@@ -19,3 +19,11 @@ NAME = "TPS analizer"
 DPI = 200
 
 LEGENCY_LOOK = 0
+
+#TOOK FROM file 1538 // tune these experimentally
+widthAlpha  = 0.35
+widthGain   = 0.35
+Eref        = 2
+bgGapPx     = 4
+bgWidthPx   = 10
+sliceLength = 4 # L1640
