@@ -1,6 +1,7 @@
 # gui/sidebar.py
 
 import customtkinter as ctk
+from gui.tps_params_window import TpsParamsWindow
 
 class SidebarFrame(ctk.CTkFrame):
     def __init__(self, master, controller, **kwargs):
@@ -32,6 +33,12 @@ class SidebarFrame(ctk.CTkFrame):
             command=self.handle_start_button_click
         )
         self.btn_set_start.pack(padx=20, pady=15, fill="x")
+        self.btn_tps_settings = ctk.CTkButton(self, text="Parametry TPS", command=self.tps_setting_show)
+
+        self.btn_tps_settings.pack(padx=20, pady=15, fill="x")
+
+        self.btn_draw = ctk.CTkButton(self, text="rysuj", command=self.controller.draw_parabola)
+        self.btn_draw.pack(padx=20, pady=15, fill="x")
 
         self.result_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.result_frame.pack(padx=20, pady=20, fill="x")
@@ -111,3 +118,7 @@ class SidebarFrame(ctk.CTkFrame):
     def set_status(self, text):
         """Sets the informational text at the bottom of the sidebar"""
         self.lbl_status.configure(text=text)
+
+    def tps_setting_show(self):
+        """Otwiera wyskakujące okienko z 11 parametrami TPS"""
+        TpsParamsWindow(master=self, controller=self.controller)

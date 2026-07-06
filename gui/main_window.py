@@ -24,6 +24,8 @@ class MainWindow(ctk.CTk):
         self.img_norm = None
         self.start_point = None
         self.is_selecting_start = False
+        self.tps_params = {}
+        self.rotation_deg = 0.3 #TODO: Add GUI element to change rotation angle
 
         #Config of layout
         self.grid_columnconfigure(1, weight=1)
@@ -80,7 +82,7 @@ class MainWindow(ctk.CTk):
         h, w = self.img_norm.shape
         szerokosc_m = w * config.PX_TO_METER
         wysokosc_m = h * config.PX_TO_METER
-        extent_sizes = [0, szerokosc_m, wysokosc_m, 0]
+        extent_sizes = [0, szerokosc_m, 0, wysokosc_m]
 
         self.plot_frame.draw_image(
             img_norm=self.img_norm, 
@@ -118,3 +120,24 @@ class MainWindow(ctk.CTk):
         plt.close('all')
         
         self.destroy()
+
+    def update_tps_parameters(self, updated_dict):
+        """Update TPS parameters"""
+        self.tps_params = updated_dict
+        print("Zaktualizowano parametry TPS w rdzeniu:", self.tps_params)
+        self.sidebar.set_status("Zapisano 11 parametrów TPS.")
+
+        # core.analysis.recalculate_trajectories(self.tps_params)
+
+    def draw_parabola(self):
+        x, y, Ep = analysis.draw_parabole(
+            controller=self,
+            A=1,#TODO: Add GUI element to change A
+            Q=1,#TODO: Add GUI element to change Q
+            E_max=1.67,
+            E_min=0.57,
+            sampling_mode="Quadratic"
+        )
+
+        self.plot_frame.ax.plot(x, y, 'r-', linewidth=1.5, label='Parabola')
+        self.plot_frame.canvas.draw()
