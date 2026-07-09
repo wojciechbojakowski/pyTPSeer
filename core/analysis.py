@@ -163,7 +163,7 @@ def filter_inside_points(px_array, py_array, x_pixels, y_pixels):
     return mask
 
 @njit(fastmath=True)
-def Energy_Graph(Ep, x, y, mass, d_phole, slice_Length = config.sliceLength , pixels_per_m=config.PX_TO_METER, pts_max = config.MAX_PTS):
+def Energy_Graph(Ep, x, y, mass, d_phole, xPixels, yPixels, slice_Length = config.sliceLength , pixels_per_m=config.PX_TO_METER, pts_max = config.MAX_PTS):
     max_E = 0.0
     for i in range(pts_max):
         EMeV = Ep[i] / mass
@@ -184,3 +184,14 @@ def Energy_Graph(Ep, x, y, mass, d_phole, slice_Length = config.sliceLength , pi
 
         signalPSL = 0.0
         signalN = 0
+
+        for j in range(start=-slice_Length, stop=slice_Length, step=1):
+            for k in range(start=-sliceHalfWidth, stop=sliceHalfWidth, step=1):
+                pxf = x[i]*pixels_per_m + j*(dx/norm) + k*nx
+                pyf = y[i]*pixels_per_m + j*(dy/norm) + k*ny
+                px = int(np.round(pxf))
+                py = int(np.round(pyf))
+                if(0>px>xPixels and 0>py>yPixels):
+                    continue
+                imgY = yPixels - 1 - py
+                

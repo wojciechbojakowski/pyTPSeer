@@ -2,6 +2,7 @@
 
 import customtkinter as ctk
 from gui.tps_params_window import TpsParamsWindow
+from gui.add_parabola_window import AddParabolaWindow
 
 class SidebarFrame(ctk.CTkFrame):
     def __init__(self, master, controller, **kwargs):
@@ -37,8 +38,14 @@ class SidebarFrame(ctk.CTkFrame):
 
         self.btn_tps_settings.pack(padx=20, pady=15, fill="x")
 
-        self.btn_draw = ctk.CTkButton(self, text="rysuj", command=self.controller.draw_parabola)
-        self.btn_draw.pack(padx=20, pady=15, fill="x")
+        self.btn_add_parabola = ctk.CTkButton(
+            self, 
+            text="➕ Dodaj parabolę", 
+            fg_color="#0077b6", 
+            hover_color="#0096c7",
+            command=self._open_add_parabola_dialog
+        )
+        self.btn_add_parabola.pack(fill="x", padx=10, pady=10)
 
         self.result_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.result_frame.pack(padx=20, pady=20, fill="x")
@@ -58,11 +65,34 @@ class SidebarFrame(ctk.CTkFrame):
         )
         self.lbl_start_coords.pack(pady=2)
 
-        lbl = ctk.CTkLabel(self.result_frame, text="Rotation: ", font=ctk.CTkFont(size=11))
-        lbl.pack(side="left", anchor="w")
+        # --- SEKCJA OBROTU PARABOLI ---
+        self.rot_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.rot_frame.pack(fill="x", padx=10, pady=10)
 
-        self.entry = ctk.CTkEntry(self.result_frame, width=120, height=24)
-        self.entry.pack(side="right", anchor="e")
+        self.rot_label = ctk.CTkLabel(self.rot_frame, text="Obrót układu [°]:", font=ctk.CTkFont(weight="bold"))
+        self.rot_label.pack(anchor="w")
+
+        # Kontenery na Input i Slider obok siebie
+        self.rot_input_frame = ctk.CTkFrame(self.rot_frame, fg_color="transparent")
+        self.rot_input_frame.pack(fill="x", pady=2)
+
+        # Pole tekstowe do wpisania dokładnej wartości (np. -0.35)
+        self.rot_entry = ctk.CTkEntry(self.rot_input_frame, width=70, height=25)
+        self.rot_entry.insert(0, str(self.controller.rotation_deg))
+        self.rot_entry.pack(side="left", padx=(0, 5))
+        # Reakcja na kliknięcie Enter w polu tekstowym
+        self.rot_entry.bind("<Return>", self._on_rot_entry_change)
+
+        # Suwak do płynnego, szybkiego obracania myszką (od -15 do +15 stopni)
+        self.rot_slider = ctk.CTkSlider(
+            self.rot_input_frame, 
+            from_=-15.0, 
+            to=15.0, 
+            number_of_steps=3000, # bardzo wysoka precyzja skoku suwaka
+            command=self._on_rot_slider_move
+        )
+        self.rot_slider.set(self.controller.rotation_deg)
+        self.rot_slider.pack(side="right", fill="x", expand=True)
         
         self.lbl_status = ctk.CTkLabel(
             self, 
@@ -98,3 +128,28 @@ class SidebarFrame(ctk.CTkFrame):
     def tps_setting_show(self):
         """Otwiera wyskakujące okienko z 11 parametrami TPS"""
         TpsParamsWindow(master=self, controller=self.controller)
+    
+    def _on_rot_slider_move(self, value):
+        """Wywoływane podczas przesuwania suwaka myszką"""
+        # Aktualizacja tekstu w entry (zaokrąglone do 2 miejsc po przecinku)
+        self.rot_entry.delete(0, "end")
+        self.rot_entry.insert(0, f"{value:.2f}")
+        # Przekazanie wartości do MainWindow i natychmiastowe przerysowanie
+        self.controller.update_rotation_angle(value)
+
+    def _on_rot_entry_change(self, event):
+        """Wywoływane po wpisaniu wartości z klawiatury i wciśnięciu Enter"""
+        try:
+            val = float(self.rot_entry.get())
+            if -15.0 <= val <= 15.0:
+                self.rot_slider.set(val)
+            self.controller.update_rotation_angle(val)
+        except ValueError:
+            self.rot_entry.configure(border_color="red")
+    
+    def _open_add_parabola_dialog(self):
+        """Otwiera popup dodawania nowej krzywej jonowej"""
+        if self.controller.start_point is None:
+            self.set_status("Najpierw zaznacz punkt zero (start point)!")
+            return
+        AddParabolaWindow(master=self.controller, controller=self.controller)

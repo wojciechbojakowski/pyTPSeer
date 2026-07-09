@@ -25,7 +25,10 @@ class MainWindow(ctk.CTk):
         self.start_point = None
         self.is_selecting_start = False
         self.tps_params = {}
-        self.rotation_deg = 0.3 #TODO: Add GUI element to change rotation angle
+        self.rotation_deg = 0.3
+        #Parabola state 
+        self.parabolas_list = []
+        self.color_palette = ['#ff0054', '#390099', '#ffbd00', '#00b4d8', '#70e000', '#ff7000']
 
         #Config of layout
         self.grid_columnconfigure(1, weight=1)
@@ -89,6 +92,31 @@ class MainWindow(ctk.CTk):
             start_point=self.start_point
         )
 
+        for idx, p_config in enumerate(self.parabolas_list):
+            x, y, _ = analysis.draw_parabole(
+                controller=self,
+                A=p_config["A"],
+                Q=p_config["Q"],
+                E_max=p_config["E_max"],
+                E_min=p_config["E_min"],
+                sampling_mode="Quadratic"
+            )
+            
+            # Dobieramy kolejny kolor z palety
+            color = self.color_palette[idx % len(self.color_palette)]
+            
+            # Naniesienie linii na wykres Matplotlib
+            self.plot_frame.ax.plot(x, y, '-', color=color, linewidth=1.5, label=p_config["name"])
+
+        # 3. Blokada osi i odświeżenie canvasu (jeśli są narysowane linie)
+        if self.parabolas_list:
+            self.plot_frame.ax.set_xlim(0, szerokosc_m)
+            self.plot_frame.ax.set_ylim(0, wysokosc_m)
+            
+            self.plot_frame.ax.legend(loc="upper right", fontsize=8)
+
+        self.plot_frame.canvas.draw()
+
     def on_plot_click(self, event):
         """Handle mouse click events on the plot canvas"""
         if event.xdata is None or event.ydata is None or self.img_norm is None:
@@ -128,17 +156,33 @@ class MainWindow(ctk.CTk):
 
         # core.analysis.recalculate_trajectories(self.tps_params)
 
+    def update_rotation_angle(self, new_angle):
+        """Aktualizuje kąt i natychmiast przerysowuje cały interfejs wraz z parabolą"""
+        self.rotation_deg = float(new_angle)
+        
+        self.refresh_interface()
+        
     def draw_parabola(self):
+        if self.start_point is None:
+            return
+
         x, y, Ep = analysis.draw_parabole(
             controller=self,
-            A=1,#TODO: Add GUI element to change A
-            Q=1,#TODO: Add GUI element to change Q
-            E_max=1.67,
+            A=12,#TODO: Add GUI element to change A
+            Q=6,#TODO: Add GUI element to change Q
+            E_max=5,
             E_min=0.57,
             sampling_mode="Quadratic"
         )
 
-        line, = self.plot_frame.ax.plot(x, y, 'm-', linewidth=1, label='Parabola')
-        number_of_points = len(line.get_xdata())
-        print(f"The plotted line has {number_of_points} points.")
+        self.plot_frame.ax.plot(x, y, 'm-', linewidth=1, label='Parabola')
+
         self.plot_frame.canvas.draw()
+
+    
+    def add_new_parabola(self, parabola_config):
+        """Dodaje nową konfigurację jona do listy i wyrysowuje ją na ekranie"""
+        self.parabolas_list.append(parabola_config)
+        self.sidebar.set_status(f"Dodano jona: {parabola_config['name']}")
+        
+        self.refresh_interface()
