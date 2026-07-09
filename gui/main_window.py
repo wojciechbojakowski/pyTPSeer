@@ -10,6 +10,7 @@ from gui.plot_canvas import PlotCanvas
 import core.image_loader as loader
 import core.analysis as analysis
 import config
+import core.spectrum_extractor as extractor
 
 class MainWindow(ctk.CTk):
     def __init__(self):
@@ -31,7 +32,8 @@ class MainWindow(ctk.CTk):
         self.color_palette = ['#ff0054', '#390099', '#ffbd00', '#00b4d8', '#70e000', '#ff7000']
 
         #Config of layout
-        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(1, weight=1, uniform="plots")
+        self.grid_columnconfigure(2, weight=1, uniform="plots")
         self.grid_rowconfigure(0, weight=1)
 
         #Init GUI components
@@ -42,6 +44,14 @@ class MainWindow(ctk.CTk):
         #Plot canvas
         self.plot_frame = PlotCanvas(master=self)
         self.plot_frame.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
+
+        self.spectrum_frame = PlotCanvas(master=self)
+        self.spectrum_frame.grid(row=0, column=2, padx=(10, 20), pady=20, sticky="nsew")
+
+        self.spectrum_frame.ax.set_title("Widmo energii jonów")
+        self.spectrum_frame.ax.set_xlabel("Energia [MeV/u]")
+        self.spectrum_frame.ax.set_ylabel("dN/dE [MeV$^{-1}$ sr$^{-1}$]")
+        self.spectrum_frame.ax.grid(True, which="both", linestyle="--", alpha=0.5)
 
         #Mouse click event
         self.plot_frame.fig.canvas.mpl_connect('button_press_event', self.on_plot_click)
@@ -91,9 +101,15 @@ class MainWindow(ctk.CTk):
             extent_sizes=extent_sizes, 
             start_point=self.start_point
         )
+        self.spectrum_frame.ax.clear()
+
+        self.spectrum_frame.ax.set_title("Widmo różniczkowe energii jonów")
+        self.spectrum_frame.ax.set_xlabel("Energia [MeV/u]")
+        self.spectrum_frame.ax.set_ylabel("dN/dE [MeV$^{-1}$ sr$^{-1}$]")
+        self.spectrum_frame.ax.grid(True, which="both", linestyle="--", alpha=0.3)
 
         for idx, p_config in enumerate(self.parabolas_list):
-            x, y, _ = analysis.draw_parabole(
+            x, y, E_arr = analysis.draw_parabole(
                 controller=self,
                 A=p_config["A"],
                 Q=p_config["Q"],
@@ -102,11 +118,35 @@ class MainWindow(ctk.CTk):
                 sampling_mode="Quadratic"
             )
             
-            # Dobieramy kolejny kolor z palety
             color = self.color_palette[idx % len(self.color_palette)]
             
-            # Naniesienie linii na wykres Matplotlib
             self.plot_frame.ax.plot(x, y, '-', color=color, linewidth=1.5, label=p_config["name"])
+
+            try:
+                # Wybieramy domyślną metodę ("FlatBox", "Gaussian" lub "PinholeBackground")
+                # Możesz potem połączyć to z wartością wybraną w boksie w GUI
+                scan_method = "FlatBox" 
+                
+                energies, dnde = extractor.extract_tps_spectrum(
+                    controller=self, 
+                    x_m=x, 
+                    y_m=y, 
+                    E_arr=E_arr, 
+                    parabola_config=p_config,
+                    method=scan_method
+                )
+                print("main 137")
+                # Jeśli silnik zwrócił poprawne punkty, nanosimy je na drugi wykres
+                if len(energies) > 0:
+                    self.spectrum_frame.ax.plot(
+                        energies, dnde, '.-', 
+                        color=color, linewidth=1.5, markersize=3,
+                        label=f"{p_config['name']} ({scan_method})"
+                    )
+                    print(f"energie:{len(energies)}")
+            except Exception as e:
+                # Bezpiecznik, jeśli np. brak zmiennych kalibracyjnych w tps_params
+                print(f"Błąd ekstrakcji spektrum dla {p_config['name']}: {e}")
 
         # 3. Blokada osi i odświeżenie canvasu (jeśli są narysowane linie)
         if self.parabolas_list:
@@ -116,6 +156,7 @@ class MainWindow(ctk.CTk):
             self.plot_frame.ax.legend(loc="upper right", fontsize=8)
 
         self.plot_frame.canvas.draw()
+        self.spectrum_frame.canvas.draw()
 
     def on_plot_click(self, event):
         """Handle mouse click events on the plot canvas"""

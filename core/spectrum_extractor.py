@@ -11,7 +11,7 @@ import config
 @njit
 def _psl_from_grey(grey01):
     """Konwersja szarości 16-bit na liniową jednostkę PSL skanera."""
-    return (25.0 / 100.0) * (25.0 / 100.0) * (10.0 ** (5.0 * (grey01 / 65534.0 - 0.5)))
+    return (25.0 / 100.0) * (25.0 / 100.0) * (10.0 ** (5.0 * (grey01 - 0.5)))
 
 @njit
 def _psl_scaling(e_mev, mass_u):
@@ -54,7 +54,7 @@ def _scan_method_flat_box(img_matrix, x_center, y_center, dx, dy, norm, nx, ny, 
             px, py = int(round(pxf)), int(round(pyf))
             
             if 0 <= px < x_pixels and 0 <= py < y_pixels:
-                img_y = y_pixels - 1 - py  # dopasowanie osi Y
+                img_y = y_pixels - 1 - py
                 grey = float(img_matrix[img_y, px])
                 psl = _psl_from_grey(grey) - psl_background
                 
@@ -179,7 +179,7 @@ def _extraction_core_loop(x_m, y_m, ep, img_matrix, mass_u, solid_angle, pixels_
     i wycina paski danych przy użyciu wybranej metody skanowania.
     """
     max_pts = len(x_m)
-    psl_background = _psl_from_grey(threshold_grey * 65535.0)
+    psl_background = _psl_from_grey(threshold_grey)
     pinhole_px = pinhole_m * pixels_per_m
     
     # Alokacja pamięci z góry (maksymalny możliwy rozmiar to max_pts)
@@ -240,7 +240,7 @@ def _extraction_core_loop(x_m, y_m, ep, img_matrix, mass_u, solid_angle, pixels_
             
         # Przeliczenie cząstek
         particles = signal_psl / scale / effective_width
-        
+
         # Krok widmowy energii
         dE = abs(ep[i+1] - ep[i-1]) / (2.0 * mass_u)
         if dE <= 0:
@@ -261,13 +261,14 @@ def _extraction_core_loop(x_m, y_m, ep, img_matrix, mass_u, solid_angle, pixels_
 # 4. JEDNA GŁÓWNA FUNKCJA URUCHAMIAJĄCA KOMBAJN (PUBLIC ENTRY POINT)
 # =========================================================================
 
-def extract_tps_spectrum(controller, x_m, y_m, E_arr, method="FlatBox"):
+def extract_tps_spectrum(controller, x_m, y_m, E_arr, parabola_config, method="FlatBox"):
     """
     Główna funkcja wywoływana z poziomu GUI.
     Pobiera wszystkie niezbędne zmienne ze stanu programu i uruchamia silnik Numba.
     """
     p = controller.tps_params
     img = controller.img_norm
+    cut_off_treshhold = 0.1 #TODO controller with sidebar
     
     if img is None:
         raise ValueError("Brak wczytanego obrazu do ekstrakcji widma!")
@@ -277,7 +278,7 @@ def extract_tps_spectrum(controller, x_m, y_m, E_arr, method="FlatBox"):
     scan_mode_flag = method_mapping.get(method, 0)
     
     # Pobranie parametrów geometrycznych i stałych
-    mass_u = float(p.get("A_mass", 1.0))
+    mass_u = float(parabola_config["A"])
     d1 = float(p.get("d1_field", 0.05))
     d2 = float(p.get("d2_field", 0.05))
     Ze1 = float(p.get("Ze1", 0.1))
@@ -286,8 +287,8 @@ def extract_tps_spectrum(controller, x_m, y_m, E_arr, method="FlatBox"):
     pin_target = float(p.get("pin_target", 0.1))
     
     # Pobranie parametrów skanowania ze suwaków GUI (lub configu)
-    threshold_grey = float(p.get("cutoff_threshold", 0.1))  # Wartość od 0 do 1 z suwaka tła
-    pixels_per_m = float(p.get("pixels_per_mm", 10.0)) * 1000.0  # Przelicznik mm -> m
+    threshold_grey = float(cut_off_treshhold)  # Wartość od 0 do 1 z suwaka tła
+    pixels_per_m = 1.0 / config.PX_TO_METER
 
     # Obliczenia fizycznego kąta bryłowego pinu
     solid_angle = (math.pi * (pin_d_m / 2.0) ** 2) / (pin_target ** 2)
@@ -305,5 +306,5 @@ def extract_tps_spectrum(controller, x_m, y_m, E_arr, method="FlatBox"):
         pinhole_m=pin_d_m,
         scan_mode_flag=scan_mode_flag
     )
-    
+    print("extract_tps_spectrum 309")
     return energy_spectrum, dnde_spectrum

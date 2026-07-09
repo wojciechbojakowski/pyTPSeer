@@ -1,8 +1,13 @@
 #09.07.2026
 - ROTATION option
     place where u can put a rotation angle and propably button or detect change in value -> DONE
-- window with ENERGY min/max of parabola
-- spectrum energy and look at energy
-- legency look make good
+- window with ENERGY min/max of parabola -> DONE
+- spectrum energy and look at energy -> DONE but _extraction_core_loop -> return 0 energies
+- legency look make good -> Change size of window so the buttons on the bottom would be visible
 
 - change every note in english, check add_parabola_window, check sidebar, check main_window, check spectrum_extractor
+
+
+#13.07.2026
+- energy should work
+-

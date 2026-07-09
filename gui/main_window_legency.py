@@ -9,7 +9,7 @@ class MainWindow_legency(ctk.CTk):
         super().__init__()
 
         self.title("Legency look")
-        self.geometry("1400://850")
+        self.geometry("1150://650")
 
         self.grid_columnconfigure(0, weight=5)
         self.grid_columnconfigure(1, weight=3)
