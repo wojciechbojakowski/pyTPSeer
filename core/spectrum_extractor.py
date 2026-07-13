@@ -306,5 +306,5 @@ def extract_tps_spectrum(controller, x_m, y_m, E_arr, parabola_config, method="F
         pinhole_m=pin_d_m,
         scan_mode_flag=scan_mode_flag
     )
-    print("extract_tps_spectrum 309")
+    
     return energy_spectrum, dnde_spectrum

@@ -1,5 +1,5 @@
 import numba
-numba.config.DISABLE_JIT = True
+#numba.config.DISABLE_JIT = True
 import customtkinter as ctk
 import config
 from gui.main_window import MainWindow

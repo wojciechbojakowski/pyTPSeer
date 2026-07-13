@@ -107,6 +107,7 @@ class MainWindow(ctk.CTk):
         self.spectrum_frame.ax.set_xlabel("Energia [MeV/u]")
         self.spectrum_frame.ax.set_ylabel("dN/dE [MeV$^{-1}$ sr$^{-1}$]")
         self.spectrum_frame.ax.grid(True, which="both", linestyle="--", alpha=0.3)
+        self.spectrum_frame.ax.set_yscale("log")
 
         for idx, p_config in enumerate(self.parabolas_list):
             x, y, E_arr = analysis.draw_parabole(
@@ -135,7 +136,7 @@ class MainWindow(ctk.CTk):
                     parabola_config=p_config,
                     method=scan_method
                 )
-                print("main 137")
+                
                 # Jeśli silnik zwrócił poprawne punkty, nanosimy je na drugi wykres
                 if len(energies) > 0:
                     self.spectrum_frame.ax.plot(
@@ -143,7 +144,7 @@ class MainWindow(ctk.CTk):
                         color=color, linewidth=1.5, markersize=3,
                         label=f"{p_config['name']} ({scan_method})"
                     )
-                    print(f"energie:{len(energies)}")
+
             except Exception as e:
                 # Bezpiecznik, jeśli np. brak zmiennych kalibracyjnych w tps_params
                 print(f"Błąd ekstrakcji spektrum dla {p_config['name']}: {e}")
