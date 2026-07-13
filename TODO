@@ -9,9 +9,16 @@
 
 
 #13.07.2026
+TODO:
 - energy should work -> half done
 - model MVVM should be implemented
 - root files
 - energy plot -> done
-- delete/edit parabole
-- background delete
+- delete/edit parabole -> it would be nice to have list of parabole and had possiblity to delete them
+- background delete -> problematic -> lots of places would need to do the same work
+- going through every picture in folder with the same settings
+- tof
+
+NOTE:
+- rotation is made by operation on NDArray so it is fairly quick
+
