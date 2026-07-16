@@ -19,6 +19,11 @@ TODO:
 - going through every picture in folder with the same settings
 - tof
 
+- list of parabola with pin so u can compare this with from other picture
+
 NOTE:
 - rotation is made by operation on NDArray so it is fairly quick
+- rotation paramter is not realy global parameter but it is connected to one parabola
+- theoretical model of electric field
+- automatic system -> choice
 

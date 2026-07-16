@@ -218,3 +218,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+
+#moje
+gui/
+main_test.py
+main2_test.py
+
