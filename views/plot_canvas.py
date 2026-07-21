@@ -158,3 +158,18 @@ class PlotCanvas1D(BasePlotCanvas):
             
         self.ax.relim()
         self.ax.autoscale_view(True, True, True)
+
+    def save_plot_png(self, filepath: str):
+        """Zapisuje aktualny stan wykresu 1D do pliku PNG w wysokiej rozdzielczości."""
+        try:
+            self.fig.savefig(
+                filepath, 
+                dpi=300, 
+                bbox_inches='tight', 
+                facecolor=self.fig.get_facecolor(),
+                edgecolor='none'
+            )
+            return True
+        except Exception as e:
+            print(f"Błąd zapisu obrazu PNG: {e}")
+            return False

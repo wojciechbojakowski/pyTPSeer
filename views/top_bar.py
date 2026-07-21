@@ -1,4 +1,6 @@
 # views/top_bar.py
+import os
+
 import customtkinter as ctk
 from tkinter import filedialog
 from viewmodels.workspace_vm import WorkspaceViewModel
@@ -69,6 +71,34 @@ class TopBarFrame(ctk.CTkFrame):
         )
         self.btn_add_ion.pack(side="left", padx=10, pady=10)
 
+        # =========================================================================
+        # SEKCJA EKSPORTU WIDMA (PRAWA STRONA GÓRNEGO PASKA)
+        # =========================================================================
+        self.export_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.export_frame.pack(side="right", padx=10)
+
+        # Przycisk eksportu ASCII
+        self.btn_export_ascii = ctk.CTkButton(
+            self.export_frame, 
+            text="💾 Widmo ASCII", 
+            command=self._on_export_ascii_click,
+            fg_color="#1f6aa5",
+            hover_color="#144870",
+            width=110
+        )
+        self.btn_export_ascii.pack(side="left", padx=3)
+
+        # Przycisk eksportu PNG
+        self.btn_export_png = ctk.CTkButton(
+            self.export_frame, 
+            text="🖼️ Wykres PNG", 
+            command=self._on_export_png_click,
+            fg_color="#2b73b5",
+            hover_color="#1d4e7a",
+            width=110
+        )
+        self.btn_export_png.pack(side="left", padx=3)
+
     # =========================================================================
     # REAKCJE NA KLIKNIĘCIA (DELEGACJA DO VIEWMODELU LUB POPUPÓW)
     # =========================================================================
@@ -127,3 +157,36 @@ class TopBarFrame(ctk.CTkFrame):
     def reset_zero_button(self):
         """Przywraca domyślny wygląd przycisku."""
         self.btn_set_zero.configure(text="📍 Zaznacz punkt zero", fg_color="#3a3a3a", hover_color="#4a4a4a")
+
+    def _on_export_ascii_click(self):
+        """Otwiera dialog zapisu pliku tekstowego z danymi widma."""
+        filepath = filedialog.asksaveasfilename(
+            title="Zapisz widmo energetyczne (ASCII)",
+            defaultextension=".dat",
+            filetypes=[
+                ("Pliki danych (*.dat)", "*.dat"),
+                ("Pliki tekstowe (*.txt)", "*.txt"),
+                ("Pliki CSV (*.csv)", "*.csv"),
+                ("Wszystkie pliki", "*.*")
+            ]
+        )
+        if filepath:
+            self.vm.export_spectrum_ascii(filepath)
+
+    def _on_export_png_click(self):
+        """Otwiera dialog zapisu wykresu widma do pliku PNG."""
+        filepath = filedialog.asksaveasfilename(
+            title="Zapisz wykres widma jako obraz",
+            defaultextension=".png",
+            filetypes=[
+                ("Obraz PNG (*.png)", "*.png"),
+                ("Wszystkie pliki", "*.*")
+            ]
+        )
+        if filepath:
+            # Pobieramy odnośnik do ramki wykresu widma z okna głównego
+            main_win = self.winfo_toplevel()
+            if hasattr(main_win, 'spectrum_frame'):
+                success = main_win.spectrum_frame.save_plot_png(filepath)
+                if success:
+                    self.vm._notify_status_change(f"Zapisano wykres PNG: {os.path.basename(filepath)}")

@@ -1,4 +1,5 @@
 # viewmodels/workspace_vm.py
+import os
 import threading
 from typing import Callable, Optional
 
@@ -219,3 +220,49 @@ class WorkspaceViewModel:
         
         # Skoro zmieniliśmy tło obrazu, musimy przeliczyć wykresy energii/TOF dla wszystkich parabol!
         self.recalculate_all_parabolas()
+
+    def export_spectrum_ascii(self, filepath: str):
+        """
+        Zapisuje widma energetyczne dN/dE wszystkich aktywnych i przypiętych parabol
+        do pliku tekstowego w formacie ASCII (.dat / .txt / .csv).
+        """
+        try:
+            with open(filepath, "w", encoding="utf-8") as f:
+                # Nagłówek pliku z metadanymi
+                f.write("# ==================================================\n")
+                f.write("# pyTPSeer - Eksport Widma Energetycznego Jonów\n")
+                if self.mcp_model:
+                    f.write(f"# Plik źródłowy MCP: {os.path.basename(self.mcp_model.file_path)}\n")
+                f.write(f"# Próg tła (Threshold): {getattr(self.mcp_model, 'background_threshold', 0.0):.2f}\n")
+                f.write("# ==================================================\n\n")
+
+                # 1. Zapis aktywnych trajektorii
+                for p in self.parabolas_list:
+                    if p.cached_spec_E is not None and len(p.cached_spec_E) > 0:
+                        f.write(f"# --- Trajektoria: {p.name} (A={p.A}, Q={p.Q}) ---\n")
+                        f.write("# E_MeV_u\tdNdE_MeV1_sr1\n")
+                        for e_val, dnde_val in zip(p.cached_spec_E, p.cached_spec_dNdE):
+                            f.write(f"{e_val:.6e}\t{dnde_val:.6e}\n")
+                        f.write("\n")
+
+                # 2. Zapis przypiętych widm referencyjnych (jeśli istnieją)
+                if self.pinned_spectra:
+                    f.write("# ==================================================\n")
+                    f.write("# WIDMA REFERENCYJNE (PRZYPIĘTE 📌)\n")
+                    f.write("# ==================================================\n\n")
+                    for pin_key, data in self.pinned_spectra.items():
+                        if isinstance(data, tuple):
+                            spec_E, spec_dNdE, _ = data
+                        else:
+                            spec_E, spec_dNdE = data.E, data.dNdE
+                        
+                        f.write(f"# --- {pin_key} ---\n")
+                        f.write("# E_MeV_u\tdNdE_MeV1_sr1\n")
+                        for e_val, dnde_val in zip(spec_E, spec_dNdE):
+                            f.write(f"{e_val:.6e}\t{dnde_val:.6e}\n")
+                        f.write("\n")
+
+            self._notify_status_change(f"Pomyślnie wyeksportowano widmo ASCII: {os.path.basename(filepath)}")
+
+        except Exception as e:
+            self._notify_status_change(f"Błąd eksportu ASCII: {e}")

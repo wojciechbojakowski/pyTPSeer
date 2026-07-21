@@ -25,8 +25,8 @@ TODO:
 - problem with energy in low energy there is a peak and propably it is one point so it is error of calculation -> What to do with it -> after using background and min energy it is not there
 
 ADD export and import TPS parameters to text file -> import done 21.07 TODO doc
-ADD saving plots
-ADD END of Files in directory
+ADD saving plots -> DONE 21.07 but to check how long ascii should be
+ADD END of Files in directory and same parameters and zero_point and parabola
 ADD template of parabola
 
 NOTE:
