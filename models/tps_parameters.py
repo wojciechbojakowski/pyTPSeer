@@ -37,3 +37,28 @@ class TPSParameters:
             
         if self.d1 <= 0 or self.d2 <= 0:
             raise ValueError("Distance between must be bigger than 0!")
+        
+
+    def import_from_txt(self, path:str):
+        try:
+           with open(path, "r", encoding="utf-8") as f:
+            lines = [line.strip() for line in f if line.strip() and not line.strip().startswith("#")] 
+            vals = [float(val) for val in lines]
+            
+            if len(vals) < 12:
+                raise ValueError(f"Oczekiwano co najmniej 12 linii parametrów w pliku, znaleziono {len(vals)}.")
+
+            #alpha=vals[0],
+            self.B_field=vals[1]
+            self.E_field=vals[2]
+            self.Zm1=vals[3]
+            self.Zm2=vals[4]
+            self.Ze1=vals[5]
+            self.Ze2=vals[6]
+            self.d1=vals[7]
+            self.d2=vals[8]
+            self.Zd=vals[9]
+        
+        except Exception as e:
+            print(f"No file found at the specified path. Error: {e}")
+            return None

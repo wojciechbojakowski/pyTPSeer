@@ -1,5 +1,6 @@
 # views/windows_popup.py
 import customtkinter as ctk
+from tkinter import filedialog
 from viewmodels.workspace_vm import WorkspaceViewModel
 from models.parabola_config import ParabolaConfig
 from models.sampling_mode import SamplingMode
@@ -17,7 +18,7 @@ class HardwareParamsPopup(ctk.CTkToplevel):
         self.geometry("580x420")
         self.resizable(False, False)
         self.transient(master) # Okno zawsze na wierzchu głównego okna
-        
+        self.entries={}
         # Główny layout siatki okna
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
@@ -28,12 +29,12 @@ class HardwareParamsPopup(ctk.CTkToplevel):
         
         self._add_label(self.col1_frame, "⚡ Pola i współrzędne Z [m]").pack(anchor="w", pady=(0, 10))
         
-        self.entry_B = self._create_field(self.col1_frame, "Pole magnetyczne B [T]:", self.vm.tps_params.B_field)
-        self.entry_E = self._create_field(self.col1_frame, "Pole elektryczne E [V/m]:", self.vm.tps_params.E_field)
-        self.entry_Zm1 = self._create_field(self.col1_frame, "Początek B (Zm1):", self.vm.tps_params.Zm1)
-        self.entry_Zm2 = self._create_field(self.col1_frame, "Koniec B (Zm2):", self.vm.tps_params.Zm2)
-        self.entry_Ze1 = self._create_field(self.col1_frame, "Początek E (Ze1):", self.vm.tps_params.Ze1)
-        self.entry_Ze2 = self._create_field(self.col1_frame, "Koniec E (Ze2):", self.vm.tps_params.Ze2)
+        self.entry_B = self._create_field(self.col1_frame, "Pole magnetyczne B [T]:","B_field", self.vm.tps_params.B_field)
+        self.entry_E = self._create_field(self.col1_frame, "Pole elektryczne E [V/m]:", "E_field",  self.vm.tps_params.E_field)
+        self.entry_Zm1 = self._create_field(self.col1_frame, "Początek B (Zm1):", "Zm1", self.vm.tps_params.Zm1)
+        self.entry_Zm2 = self._create_field(self.col1_frame, "Koniec B (Zm2):", "Zm2", self.vm.tps_params.Zm2)
+        self.entry_Ze1 = self._create_field(self.col1_frame, "Początek E (Ze1):", "Ze1", self.vm.tps_params.Ze1)
+        self.entry_Ze2 = self._create_field(self.col1_frame, "Koniec E (Ze2):", "Ze2", self.vm.tps_params.Ze2)
 
         # --- KOLUMNA 2: Geometria Przesłony i Okładzin ---
         self.col2_frame = ctk.CTkFrame(self, fg_color="transparent")
@@ -41,15 +42,25 @@ class HardwareParamsPopup(ctk.CTkToplevel):
         
         self._add_label(self.col2_frame, "📐 Geometria i szczeliny").pack(anchor="w", pady=(0, 10))
         
-        self.entry_Zd = self._create_field(self.col2_frame, "Dystans detektora (Zd) [m]:", self.vm.tps_params.Zd)
-        self.entry_d1 = self._create_field(self.col2_frame, "Szczelina wejściowa d1 [m]:", self.vm.tps_params.d1)
-        self.entry_d2 = self._create_field(self.col2_frame, "Szczelina wyjściowa d2 [m]:", self.vm.tps_params.d2)
-        self.entry_pin_d = self._create_field(self.col2_frame, "Średnica pinhole [mm]:", self.vm.tps_params.pin_d)
-        self.entry_pin_target = self._create_field(self.col2_frame, "Dystans Target-Pinhole [m]:", self.vm.tps_params.pin_target)
+        self.entry_Zd = self._create_field(self.col2_frame, "Dystans detektora (Zd) [m]:", "Zd", self.vm.tps_params.Zd)
+        self.entry_d1 = self._create_field(self.col2_frame, "Szczelina wejściowa d1 [m]:", "d1", self.vm.tps_params.d1)
+        self.entry_d2 = self._create_field(self.col2_frame, "Szczelina wyjściowa d2 [m]:", "d2", self.vm.tps_params.d2)
+        self.entry_pin_d = self._create_field(self.col2_frame, "Średnica pinhole [mm]:", "pin_d", self.vm.tps_params.pin_d)
+        self.entry_pin_target = self._create_field(self.col2_frame, "Dystans Target-Pinhole [m]:", "pin_target", self.vm.tps_params.pin_target)
 
         # --- DOLNY PANEL Z PRZYCISKAMI ---
         self.btn_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.btn_frame.grid(row=1, column=0, columnspan=2, sticky="ew", padx=20, pady=10)
+
+        self.btn_open = ctk.CTkButton(
+            self.btn_frame, 
+            text="📂 Wczytaj z .txt", 
+            command=self._on_open_file_click, 
+            fg_color="#3a3a3a", 
+            hover_color="#555555",
+            width=120
+        )
+        self.btn_open.pack(side="left")
         
         self.btn_save = ctk.CTkButton(self.btn_frame, text="💾 Zastosuj zmiany", command=self._on_save_click, fg_color="#2b73b5", hover_color="#225c91")
         self.btn_save.pack(side="right", padx=5)
@@ -57,7 +68,7 @@ class HardwareParamsPopup(ctk.CTkToplevel):
         self.btn_cancel = ctk.CTkButton(self.btn_frame, text="Anuluj", command=self.destroy, fg_color="#444444", hover_color="#555555")
         self.btn_cancel.pack(side="right", padx=5)
 
-    def _create_field(self, parent, label_text, current_value):
+    def _create_field(self, parent, label_text, key, current_value):
         """Pomocniczy generator wiersza formularza (Label + Entry)."""
         row = ctk.CTkFrame(parent, fg_color="transparent")
         row.pack(fill="x", pady=2)
@@ -66,6 +77,7 @@ class HardwareParamsPopup(ctk.CTkToplevel):
         entry = ctk.CTkEntry(row, height=24, font=ctk.CTkFont(size=12))
         entry.insert(0, str(current_value))
         entry.pack(side="right", fill="x", expand=True)
+        self.entries[key]=entry
         return entry
 
     def _add_label(self, parent, text):
@@ -89,7 +101,22 @@ class HardwareParamsPopup(ctk.CTkToplevel):
         # ViewModel zajmie się walidacją. Jeśli wpisano błąd, informacja pojawi się na pasku statusu
         self.vm.update_hardware_parameters(gui_data)
         self.destroy()
-
+    def _on_open_file_click(self):
+        """Opeeration of loading a txt file with parameters for TPS"""
+        filepath = filedialog.askopenfilename(
+            title="Wybierz plik konfiguracyjny TPS",
+            filetypes=[("Pliki tekstowe TPS", "*.txt"), ("Wszystkie pliki", "*.*")]
+        )
+        if filepath:
+            try:
+                self.vm.tps_params.import_from_txt(filepath)
+                for key, entry in self.entries.items():
+                    if hasattr(self.vm.tps_params, key):
+                        val = getattr(self.vm.tps_params, key)
+                        entry.delete(0, "end")
+                        entry.insert(0, str(val))
+            except Exception as e:
+                print(f"Błąd odczytu pliku w okienku: {e}")
 
 # =========================================================================
 # 2. POPUP: FORMULARZ DODAWANIA NOWEJ TRAJEKTORII JONU

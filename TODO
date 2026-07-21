@@ -15,14 +15,19 @@ TODO:
 - root files
 - energy plot -> done
 - delete/edit parabole -> it would be nice to have list of parabole and had possiblity to delete them -> Done -> Bug not refresh after edit
-- background delete -> problematic -> lots of places would need to do the same work
+- background delete -> problematic -> lots of places would need to do the same work -> DONE 21.07
 - going through every picture in folder with the same settings -> Done propably 16.07-21.07
 - tof -> Done 21.07
 
 - list of parabola with pin so u can compare this with from other picture -> Done 21.07
 
--make a place for plots a little bigger and a little smaller bottom part
-- problem with energy in low energy there is a peak and propably it is one point so it is error of calculation -> What to do with it
+- make a place for plots a little bigger and a little smaller bottom part
+- problem with energy in low energy there is a peak and propably it is one point so it is error of calculation -> What to do with it -> after using background and min energy it is not there
+
+ADD export and import TPS parameters to text file -> import done 21.07 TODO doc
+ADD saving plots
+ADD END of Files in directory
+ADD template of parabola
 
 NOTE:
 - rotation is made by operation on NDArray so it is fairly quick
