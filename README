@@ -11,7 +11,7 @@
 * **Szybkie Silniki Numeryczne (JIT / Numba):** Całkowanie równań ruchu jonów w polach $E$ i $B$ przyspieszane kompilacją JIT (30+ FPS).
 * **Automatyczne Wycinanie Widm (1D):** Równoległa generacja widm energetycznych $dN/dE$ oraz widm czasu przelotu TOF bezpośrednio z macierzy jasności obrazu.
 * **Redukcja Szumów i Odcięcie Tła (Thresholding):** Interaktywne odcinanie szumu cieplnego kamery/detektora na żywo.
-* **Architektura MVVM:** Plan był by tak było jak wyszło to można ocenić. Podział na warstwy logiki naukowej, modeli oraz warstwy CustomTkinter + Matplotlib.
+* **Architektura MVVM:** Czysty podział na warstwy logiki naukowej, modeli oraz warstwy CustomTkinter + Matplotlib.
 
 ---
 
@@ -25,7 +25,7 @@
 
 1. **Sklonuj repozytorium:**
 ```bash
-   git clone [https://github.com/twoj-username/pyTPSeer.git](https://github.com/twoj-username/pyTPSeer.git)
+   git clone https://github.com/twoj-username/pyTPSeer.git
    cd pyTPSeer
 ```
 
@@ -63,10 +63,10 @@ pyTPSeer/
 ├── main.py                   # Punkt wejścia aplikacji
 ├── core/                     # Silnik numeryczny JIT (Numba) i integrator równań ruchu
 │   └── numerical_engine.py
-├── models/                   # Modele danych (MCPModel, ParabolaConfig, TPSParams), Klasy
+├── models/                   # Modele danych (MCPModel, ParabolaConfig, TPSParams)
 │   ├── mcp_model.py
 │   └── parabola_config.py
-├── viewmodels/               # Warstwa logiki biznesowej i wielowątkowości (MVVM), Przechowywuje stan aplikacji -> taka była filozofia
+├── viewmodels/               # Warstwa logiki biznesowej i wielowątkowości (MVVM)
 │   └── workspace_vm.py
 └── views/                    # Warstwa interfejsu graficznego (CustomTkinter + Matplotlib)
     ├── main_window.py
@@ -81,13 +81,13 @@ pyTPSeer/
 
 ## 🔬 Podstawowy Workflow Pracy
 
-1. **Wczytaj Obraz:** Kliknij `Wczytaj obraz MCP` i wybierz plik `.tif` / `.png`.
+1. **Wczytaj Obraz:** Kliknij `Wczytaj obraz MCP` i wybierz plik `.tif` / `.png` / `.root`.
 2. **Podaj Parametry TPS:** Kliknij w `Parametry TPS` i ustaw parametry.
 3. **Ustaw Punkt Zero:** Kliknij `Zaznacz punkt zero`, a następnie wskaż na obrazie pozycję otworka (pinhole / $x_0, y_0$).
 4. **Dodaj Ślad Jonowy:** Wybierz `Dodaj nową parabolę`, podaj masę $A$, ładunek $Q$ oraz zakres energii.
 5. **Skalibruj Rotację:** Wybierz parabolę z dolnej listy i dopasuj jej kąt suwakiem lub wpisując wartość z palca.
 6. **Odetnij Tło:** Dostosuj suwak `🧹 Odcięcie tła`, aby usunąć szum matrycy.
-7. **Porównaj Wyniki:** Przypnij wybrane widmo ikona 📌, wczytaj kolejny plik i porównaj uzyskane piki!
+7. **Porównaj Wyniki:** Przypnij wybrane widmo ikoną 📌, wczytaj kolejny plik i porównaj uzyskane piki!
 
 ---
 
@@ -95,5 +95,4 @@ pyTPSeer/
 
 Projekt udostępniany na licencji MIT / Akademickiej.
 
-
----
+```
