@@ -2,7 +2,7 @@ name: Build Windows Executables (PyInstaller)
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master", "refactor/mvvm-architecture" ]
     tags:
       - 'v*'
   workflow_dispatch:
