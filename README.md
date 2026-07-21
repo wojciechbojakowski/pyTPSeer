@@ -3,10 +3,10 @@
 **Oprogramowanie do analizy i obróbki widm z Thomson Parabola Spectrometer (TPS)**
 `pyTPSeer` to desktopowa aplikacja naukowa napisana w języku Python, przeznaczona do kalibracji, symulacji trajektorii jonów oraz ekstrakcji różniczkowych widm energetycznych ($dN/dE$) i widm czasu przelotu (**TOF**) z kadrów detektorów MCP.
 
-
 ---
 
 ## 🌟 Kluczowe Funkcjonalności
+
 * **Akomodacja i Kalibracja Kątowa:** Płynna kalibracja rotacji śladu jonowego w czasie rzeczywistym z poziomu suwaka lub precyzyjnego pola tekstowego.
 * **Szybkie Silniki Numeryczne (JIT / Numba):** Całkowanie równań ruchu jonów w polach $E$ i $B$ przyspieszane kompilacją JIT (30+ FPS).
 * **Automatyczne Wycinanie Widm (1D):** Równoległa generacja widm energetycznych $dN/dE$ oraz widm czasu przelotu TOF bezpośrednio z macierzy jasności obrazu.
@@ -18,33 +18,40 @@
 ## 🛠️ Wymagania i Instalacja
 
 ### Wymagania systemowe
+
 * Python 3.10+
 * Systemy: Linux (zalecany Debian/Ubuntu), Windows 10/11, macOS
 
 ### Instalacja krok po kroku
-1. **Sklonuj repozytorium:**
-    ```bash
-        git clone https://github.com/twoj-username/pyTPSeer.git
-        cd pyTPSeer
-    ```
 
+1. **Sklonuj repozytorium:**
+
+   ```bash
+       git clone https://github.com/wojciechbojakowski/pyTPSeer.git
+       cd pyTPSeer
+   ```
 2. **Stwórz i aktywuj środowisko wirtualne:**
-    ```bash
-        python3 -m venv env
-        source env/bin/activate        # Linux / macOS
-        # lub dla Windows: env\Scripts\activate
-    ```
+
+   ```bash
+       python3 -m venv env
+       source env/bin/activate        # Linux / macOS
+       # lub dla Windows: env\Scripts\activate
+   ```
 3. **Zainstaluj wymagane pakiety:**
-    ```bash
-        pip install -r requirements.txt
-    ```
+
+   ```bash
+       pip install -r requirements.txt
+   ```
 4. **Uruchom aplikację:**
-    ```bash
-        python3 main.py
-    ```
+
+   ```bash
+       python3 main.py
+   ```
+
 ---
 
 ## 📂 Struktura Projektu
+
 ```text
     pyTPSeer/
     ├── config.py                 # Stałe fizyczne (M_ION, Q_ION) i domyślne parametry pola
@@ -67,6 +74,7 @@
 ---
 
 ## 🔬 Podstawowy Workflow Pracy
+
 1. **Wczytaj Obraz:** Kliknij `Wczytaj obraz MCP` i wybierz plik `.tif` / `.png` / `.root`.
 2. **Podaj Parametry TPS:** Kliknij w `Parametry TPS` i ustaw parametry.
 3. **Ustaw Punkt Zero:** Kliknij `Zaznacz punkt zero`, a następnie wskaż na obrazie pozycję otworka (pinhole / $x_0, y_0$).
@@ -78,4 +86,5 @@
 ---
 
 ## 📜 Licencja
+
 Projekt udostępniany na licencji MIT / Akademickiej.
