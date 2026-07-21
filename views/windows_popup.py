@@ -123,18 +123,52 @@ class HardwareParamsPopup(ctk.CTkToplevel):
 # =========================================================================
 class AddParabolaPopup(ctk.CTkToplevel):
     def __init__(self, master, viewmodel: WorkspaceViewModel, **kwargs):
-        """Okienko formularza specyfikacji nowego jona i zakresu energetycznego."""
+        """Okienko formularza specyfikacji nowego jona z obsługą szablonów (presetów)."""
         super().__init__(master, **kwargs)
         self.vm = viewmodel
         
         self.title("Konfiguracja nowej paraboli jonowej")
-        self.geometry("380x360")
+        self.geometry("400x420")
         self.resizable(False, False)
         self.transient(master)
         
         self.main_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.main_frame.pack(fill="both", expand=True, padx=25, pady=20)
+        self.main_frame.pack(fill="both", expand=True, padx=25, pady=15)
         
+        # --- DEFINICJA PRESETÓW (Nazwa -> (A, Q, Emin, Emax)) ---
+        self.presets = {
+            "Proton (H+)": ("1.0", "1.0", "0.2", "3.0"),
+            "Węgiel (C6+)": ("12.0", "6.0", "1.0", "20.0"),
+            "Węgiel (C4+)": ("12.0", "4.0", "1.0", "15.0"),
+            "Tlen (O8+)": ("16.0", "8.0", "1.0", "25.0"),
+            "Własna cząstka...": ("1.0", "1.0", "0.5", "2.0")
+        }
+
+        # --- PRESET DROPDOWN ---
+        row_preset = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        row_preset.pack(fill="x", pady=(0, 8))
+        
+        ctk.CTkLabel(
+            row_preset, 
+            text="Szybki szablon jonu:", 
+            anchor="w", 
+            width=140, 
+            font=ctk.CTkFont(weight="bold")
+        ).pack(side="left")
+        
+        # Prawidłowa inicjalizacja z przedrostkiem self. !
+        self.combo_presets = ctk.CTkComboBox(
+            row_preset, 
+            values=list(self.presets.keys()),
+            command=self._on_preset_selected,
+            height=26
+        )
+        self.combo_presets.pack(side="right", fill="x", expand=True)
+
+        # Separator
+        sep = ctk.CTkFrame(self.main_frame, height=1, fg_color="#444444")
+        sep.pack(fill="x", pady=6)
+
         # --- POLA FORMULARZA ---
         self.entry_name = self._add_form_row("Nazwa identyfikacyjna:", "np. Proton (H+)")
         self.entry_A = self._add_form_row("Masa cząstki A [u]:", "1.0")
@@ -142,25 +176,41 @@ class AddParabolaPopup(ctk.CTkToplevel):
         self.entry_Emin = self._add_form_row("Energia E_min [MeV]:", "0.1")
         self.entry_Emax = self._add_form_row("Energia E_max [MeV]:", "10.0")
         
-        # Słupek wyboru metody próbkowania energii (Enum SamplingMode)
+        # Próbkowanie energii (Enum SamplingMode)
         row_enum = ctk.CTkFrame(self.main_frame, fg_color="transparent")
-        row_enum.pack(fill="x", pady=6)
+        row_enum.pack(fill="x", pady=5)
         ctk.CTkLabel(row_enum, text="Próbkowanie energii:", anchor="w", width=140).pack(side="left")
         
-        # Pobieramy opcje tekstowe wprost z modelu Enuma
         enum_labels = [mode.label for mode in SamplingMode]
         self.combo_sampling = ctk.CTkComboBox(row_enum, values=enum_labels, height=26)
-        self.combo_sampling.set(SamplingMode.QUADRATIC.label) # Domyślny wybór
+        self.combo_sampling.set(SamplingMode.QUADRATIC.label)
         self.combo_sampling.pack(side="right", fill="x", expand=True)
         
+        # Wywołujemy uzupełnienie pól DOPIERO PO ich utworzeniu!
+        default_preset = "Proton (H+)"
+        self.combo_presets.set(default_preset)
+        self._on_preset_selected(default_preset)
+
         # --- PRZYCISKI AKCJI ---
         self.btn_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
-        self.btn_frame.pack(fill="x", pady=(25, 0))
+        self.btn_frame.pack(fill="x", pady=(20, 0))
         
-        self.btn_submit = ctk.CTkButton(self.btn_frame, text="➕ Dodaj ślad", command=self._on_submit_click, fg_color="#2b73b5", hover_color="#225c91")
+        self.btn_submit = ctk.CTkButton(
+            self.btn_frame, 
+            text="➕ Dodaj ślad", 
+            command=self._on_submit_click, 
+            fg_color="#2b73b5", 
+            hover_color="#225c91"
+        )
         self.btn_submit.pack(side="right", padx=5)
         
-        self.btn_cancel = ctk.CTkButton(self.btn_frame, text="Anuluj", command=self.destroy, fg_color="#444444", hover_color="#555555")
+        self.btn_cancel = ctk.CTkButton(
+            self.btn_frame, 
+            text="Anuluj", 
+            command=self.destroy, 
+            fg_color="#444444", 
+            hover_color="#555555"
+        )
         self.btn_cancel.pack(side="right", padx=5)
 
     def _add_form_row(self, label_text, placeholder):
@@ -196,6 +246,27 @@ class AddParabolaPopup(ctk.CTkToplevel):
             
         except ValueError:
             self.vm._notify_status_change("BŁĄD Formularza: Masa, Ładunek i Energie muszą być liczbami!")
+
+    def _on_preset_selected(self, choice: str):
+        """Uzupełnia nazwę oraz parametry fizyczne na podstawie wybranego presetu."""
+        if choice in self.presets:
+            a, q, emin, emax = self.presets[choice]
+            
+            # Jeśli wybrano własną cząstkę, pole nazwy zostawiamy puste dla użytkownika
+            preset_name = "" if choice == "Własna cząstka..." else choice
+            
+            mappings = [
+                (self.entry_name, preset_name),
+                (self.entry_A, a),
+                (self.entry_Q, q),
+                (self.entry_Emin, emin),
+                (self.entry_Emax, emax)
+            ]
+            
+            for entry, val in mappings:
+                entry.delete(0, "end")
+                if val:
+                    entry.insert(0, val)
 
 class ParabolaConfigPopup(ctk.CTkToplevel):
     def __init__(self, master, viewmodel: WorkspaceViewModel, edit_index: int = None, **kwargs):

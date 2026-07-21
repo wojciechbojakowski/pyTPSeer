@@ -27,8 +27,8 @@ TODO:
 
 ADD export and import TPS parameters to text file -> import done 21.07 TODO doc
 ADD saving plots -> DONE 21.07 but to check how long ascii should be
-ADD END of Files in directory and same parameters and zero_point and parabola
-ADD template of parabola
+ADD END of Files in directory and same parameters and zero_point and parabola 
+ADD template of parabola -> 21.07 added
 
 NOTE:
 - rotation is made by operation on NDArray so it is fairly quick

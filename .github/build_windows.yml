@@ -1,0 +1,71 @@
+name: Build Windows Executables (PyInstaller)
+
+on:
+  push:
+    branches: [ "main", "master" ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: 📥 Klonowanie repozytorium
+        uses: actions/checkout@v4
+
+      - name: 🐍 Konfiguracja środowiska Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 📦 Instalacja zależności i PyInstallera
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install -r requirements.txt
+
+      # ------------------------------------------------------------------
+      # 1. BUDOWANIE WERSJI ONEFILE (Pojedyncza plik .exe)
+      # ------------------------------------------------------------------
+      - name: 🔨 Kompilacja PyInstaller (OneFile)
+        run: |
+          pyinstaller --noconfirm --onefile --windowed --name "pyTPSeer_OneFile" --collect-all customtkinter main.py
+
+      # ------------------------------------------------------------------
+      # 2. BUDOWANIE WERSJI ONEFOLDER (Katalog z plikiem .exe i plikami)
+      # ------------------------------------------------------------------
+      - name: 🔨 Kompilacja PyInstaller (OneFolder)
+        run: |
+          pyinstaller --noconfirm --onedir --windowed --name "pyTPSeer_OneFolder" --collect-all customtkinter main.py
+
+      - name: 🗜️ Pakowanie OneFolder do ZIP
+        shell: powershell
+        run: |
+          Compress-Archive -Path "dist/pyTPSeer_OneFolder" -DestinationPath "dist/pyTPSeer_OneFolder.zip"
+
+      # ------------------------------------------------------------------
+      # 3. TYMCZASOWE ARTIFACTY (Dostępne do pobrania w zakładce Actions)
+      # ------------------------------------------------------------------
+      - name: 📤 Wysyłanie Artifactów (Testowe)
+        uses: actions/upload-artifact@v4
+        with:
+          name: pyTPSeer-Windows-Builds
+          path: |
+            dist/pyTPSeer_OneFile.exe
+            dist/pyTPSeer_OneFolder.zip
+
+      # ------------------------------------------------------------------
+      # 4. GITHUB RELEASE (Stały link po wypuszczeniu wersji / taga)
+      # ------------------------------------------------------------------
+      - name: 🚀 Tworzenie GitHub Release (Stałe linki)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/pyTPSeer_OneFile.exe
+            dist/pyTPSeer_OneFolder.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
