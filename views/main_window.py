@@ -44,7 +44,7 @@ class MainWindow(ctk.CTk):
         self.right_plots_container.grid_columnconfigure(0, weight=1)
         
         # Wykres Energii (Górny w prawej kolumnie)
-        self.spectrum_frame = PlotCanvas1D(master=self.right_plots_container)
+        self.spectrum_frame = PlotCanvas1D(master=self.right_plots_container,is_log_y=True)
         self.spectrum_frame.grid(row=0, column=0, sticky="nsew", padx=0, pady=5)
         
         # Wykres TOF (Dolny w prawej kolumnie - na razie placeholder)
@@ -85,7 +85,6 @@ class MainWindow(ctk.CTk):
         h, w = self.vm.mcp_model.shape
         extent_sizes = [0, w * config.PX_TO_METER, 0, h * config.PX_TO_METER]
 
-        print("LOG 88")
         self.plot_frame.draw_detector_frame(
             img_matrix=self.vm.mcp_model.matrix, 
             extent_sizes=extent_sizes, 
@@ -93,14 +92,34 @@ class MainWindow(ctk.CTk):
             cmap=self.vm.active_cmap
         )
         
-        print("LOG 96")
         self.spectrum_frame.clear_and_setup(
             title="Widmo różniczkowe energii jonów",
             xlabel="Energia [MeV/u]",
             ylabel="dN/dE [MeV$^{-1}$ sr$^{-1}$]"
         )
 
-        print("LOG 103")
+        self.tof_frame.clear_and_setup(
+            title="Widmo czasu przelotu (Time-of-Flight)",
+            xlabel="Czas przelotu t [ns]",
+            ylabel="Sygnał TOF [a.u.]"
+        )
+
+        # =========================================================================
+        # NOWOŚĆ: Najpierw rysujemy PRZYPIĘTE WIDMA z innych obrazów (jako tło porównawcze)
+        # =========================================================================
+        for label, (pinned_E, pinned_dNdE, orig_color) in self.vm.pinned_spectra.items():
+            # Rysujemy je przerywaną linią '--', żeby odróżniały się od aktywnych śladów
+            self.spectrum_frame.plot_series(
+                x=pinned_E, 
+                y=pinned_dNdE, 
+                color=orig_color, 
+                label=label, 
+                draw_points=False # Sama linia przerywana
+            )
+            # Stylizujemy linię referencyjną na przerywaną bezpośrednio w osiach:
+            self.spectrum_frame.ax.lines[-1].set_linestyle("--")
+            self.spectrum_frame.ax.lines[-1].set_alpha(0.7) # Delikatnie przezroczysta
+            
         for idx, p in enumerate(self.vm.parabolas_list):
             color = self.color_palette[idx % len(self.color_palette)]
             
@@ -114,12 +133,16 @@ class MainWindow(ctk.CTk):
                 self.spectrum_frame.plot_series(p.cached_spec_E, p.cached_spec_dNdE, color, p.name, draw_points=True)
                 print(f"LOG 115 {idx}")
 
+            if p.cached_tof_t is not None and len(p.cached_tof_t) > 0:
+                self.tof_frame.plot_series(p.cached_tof_t, p.cached_tof_signal, color, p.name, draw_points=False)
+                print(f"LOG 138 {idx}")
+
         # 4. Finalizujemy i odświeżamy ekrany
         self.spectrum_frame.finalize_plot()
         
         self.plot_frame.draw()
         self.spectrum_frame.draw()
-        print("LOG 122")
+        self.tof_frame.draw()
         self.bottom_control.refresh_parabola_list(self.color_palette)
 
     def _on_plot_click(self, event):

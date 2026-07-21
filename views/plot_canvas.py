@@ -53,6 +53,10 @@ class MCPCanvas(BasePlotCanvas):
         """Dedykowany do wyświetlania kadru MCP z paskiem narzędzi."""
         super().__init__(master, **kwargs)
         self.cbar = None
+
+        self.fig.set_layout_engine('none') 
+        self.fig.subplots_adjust(left=0.15, bottom=0.15, right=0.82, top=0.90)
+
         self.grid_rowconfigure(0, weight=1)  # Rząd 0 (Wykres) - bierze całą przestrzeń
         self.grid_rowconfigure(1, weight=0)  # Rząd 1 (Toolbar) - ma stałą wysokość
         self.grid_columnconfigure(0, weight=1)
@@ -86,30 +90,23 @@ class MCPCanvas(BasePlotCanvas):
         """Czyści tło i nanosi surowy obraz z detektora wraz ze skalą intensywności."""
         self.ax.clear()
         self._apply_dark_theme_styles()
-        
-        # Bezpieczne odświeżanie Colorbaru
-        if self.cbar is not None:
-            try:
-                self.cbar.remove()
-            except Exception:
-                pass
-            self.cbar = None
 
-        im = self.ax.imshow(img_matrix, cmap=cmap, extent=extent_sizes, aspect='equal')
-        self.ax.set_title("Kadr detektora MCP")
-        self.ax.set_xlabel("Pozycja X [m]")
-        self.ax.set_ylabel("Pozycja Y [m]")
+        im = self.ax.imshow(img_matrix, cmap=cmap, extent=extent_sizes)
+        self.ax.set_xlabel("X [m]")
+        self.ax.set_ylabel("Y [m]")
         
-        # Dodanie legendy barwnej
-        self.cbar = self.fig.colorbar(im, ax=self.ax, fraction=0.046, pad=0.04)
+        if self.cbar is None:
+            self.cbar = self.fig.colorbar(im, ax=self.ax, fraction=0.046, pad=0.05)
+            self.cbar.ax.set_ylabel("Jasność / Sygnał [a.u.]", color='white', labelpad=10)
+            self.cbar.outline.set_edgecolor('#444444')
+        else:
+            self.cbar.update_normal(im)
+            
         self.cbar.ax.yaxis.set_tick_params(color='white', labelcolor='white')
-        self.cbar.ax.set_ylabel("Jasność / Sygnał [a.u.]", color='white', labelpad=10)
-        self.cbar.outline.set_edgecolor('#444444')
         
-        # Rysowanie celownika punktu zero
         if start_point is not None:
             x_zero, y_zero = start_point
-            self.ax.plot(x_zero, y_zero, 'rx', markersize=12, markeredgewidth=2, label="Pinhole")
+            self.ax.plot(x_zero, y_zero, 'rx', markersize=5, markeredgewidth=2, label="Pinhole")
 
     def draw_parabola_overlay(self, x, y, color: str, label: str):
         """Nanosi teoretyczną linię paraboli bezpośrednio na zdjęcie."""

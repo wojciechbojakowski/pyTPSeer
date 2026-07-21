@@ -402,3 +402,36 @@ def _extraction_core_loop(x_m, y_m, ep, img_matrix, mass_u, solid_angle, pixels_
             valid_count += 1
             
     return out_E[:valid_count], out_dNdE[:valid_count]
+
+def calculate_tof_spectrum(E_array_MeV: np.ndarray, dNdE_array: np.ndarray, A: float, L_path_m: float = 1.0):
+    """
+    Konwertuje widmo energii (E vs dN/dE) na widmo czasu przelotu TOF (t [ns] vs Signal).
+    
+    :param E_array_MeV: Tablica energii jonów w MeV/u
+    :param dNdE_array: Sygnał różniczkowy dN/dE
+    :param A: Liczba masowa (u)
+    :param L_path_m: Długość drogi lotu jonów od tarczy do MCP [m]
+    :return: (t_ns, signal_tof)
+    """
+    if len(E_array_MeV) == 0:
+        return np.array([]), np.array([])
+
+    # Przeliczenie energii z MeV na Dżule [J]
+    m_kg = A * config.M_ION  # Masa w kg
+    E_joules = E_array_MeV * A * config.MeV_TO_J
+
+    # Prędkość jonów v = sqrt(2E/m) [m/s]
+    velocity = np.sqrt(2 * E_joules / m_kg)
+
+    # Czas przelotu t = L / v [s] -> konwersja na nanosekundy [ns]
+    t_seconds = L_path_m / velocity
+    t_ns = t_seconds * 1e9
+
+    # Sygnał w czasie: S(t) = dN/dE * |dE/dt|
+    # Ponieważ E = 1/2 m (L/t)^2 -> |dE/dt| = m * L^2 / t^3
+    dE_dt = (m_kg * (L_path_m ** 2)) / (t_seconds ** 3)
+    signal_tof = dNdE_array * (dE_dt / config.MeV_TO_J)
+
+    # Sortujemy dane według rosnącego czasu t (bo wyższe energie docierają wcześniej!)
+    sort_idx = np.argsort(t_ns)
+    return t_ns[sort_idx], signal_tof[sort_idx]

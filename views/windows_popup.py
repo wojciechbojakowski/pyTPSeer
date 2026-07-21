@@ -169,3 +169,97 @@ class AddParabolaPopup(ctk.CTkToplevel):
             
         except ValueError:
             self.vm._notify_status_change("BŁĄD Formularza: Masa, Ładunek i Energie muszą być liczbami!")
+
+class ParabolaConfigPopup(ctk.CTkToplevel):
+    def __init__(self, master, viewmodel: WorkspaceViewModel, edit_index: int = None, **kwargs):
+        super().__init__(master, **kwargs)
+        self.vm = viewmodel
+        self.edit_index = edit_index
+        
+        self.title("✏️ Edycja paraboli" if edit_index is not None else "➕ Dodaj nową parabolę")
+        self.geometry("400x500")
+        
+        self.main_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.main_frame.pack(fill="both", expand=True, padx=25, pady=20)
+        
+        # --- POLA FORMULARZA ---
+        self.entry_name = self._add_form_row("Nazwa identyfikacyjna:", "np. Proton (H+)")
+        self.entry_A = self._add_form_row("Masa cząstki A [u]:", "1.0")
+        self.entry_Q = self._add_form_row("Stan ładunkowy Q [e]:", "1.0")
+        self.entry_E_min = self._add_form_row("Energia E_min [MeV]:", "0.1")
+        self.entry_E_max = self._add_form_row("Energia E_max [MeV]:", "10.0")
+        
+        # Słupek wyboru metody próbkowania energii (Enum SamplingMode)
+        row_enum = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        row_enum.pack(fill="x", pady=6)
+        ctk.CTkLabel(row_enum, text="Próbkowanie energii:", anchor="w", width=140).pack(side="left")
+        
+        # Pobieramy opcje tekstowe wprost z modelu Enuma
+        enum_labels = [mode.label for mode in SamplingMode]
+        self.combo_sampling = ctk.CTkComboBox(row_enum, values=enum_labels, height=26)
+        self.combo_sampling.set(SamplingMode.QUADRATIC.label)
+        self.combo_sampling.pack(side="right", fill="x", expand=True)
+        
+        # --- PRZYCISKI AKCJI ---
+        self.btn_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        self.btn_frame.pack(fill="x", pady=(25, 0))
+        
+        self.btn_submit = ctk.CTkButton(self.btn_frame, text="Edytuj ślad", command=self._on_submit_click, fg_color="#2b73b5", hover_color="#225c91")
+        self.btn_submit.pack(side="right", padx=5)
+        
+        self.btn_cancel = ctk.CTkButton(self.btn_frame, text="Anuluj", command=self.destroy, fg_color="#444444", hover_color="#555555")
+        self.btn_cancel.pack(side="right", padx=5)
+
+        if self.edit_index is not None:
+            p = self.vm.parabolas_list[self.edit_index]
+            self.entry_name.insert(0, p.name)
+            self.entry_A.insert(0, str(p.A))
+            self.entry_Q.insert(0, str(p.Q))
+            self.entry_E_min.insert(0, str(p.E_min))
+            self.entry_E_max.insert(0, str(p.E_max))
+            self.combo_sampling.set(p.sampling_mode)
+            # ... upewnij się, że czyścisz domyślne placeholder-y przed insertem!
+
+    def _add_form_row(self, label_text, placeholder):
+        row = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        row.pack(fill="x", pady=5)
+        ctk.CTkLabel(row, text=label_text, anchor="w", width=140).pack(side="left")
+        entry = ctk.CTkEntry(row, placeholder_text=placeholder, height=26)
+        entry.pack(side="right", fill="x", expand=True)
+        return entry
+
+    def _on_submit_click(self):
+        """Zapisuje dane ze zmienionego formularza."""
+        try:
+            name_val = self.entry_name.get().strip()
+            name = name_val if name_val else "Jon nienazwany"
+            
+            A = float(self.entry_A.get().strip() if self.entry_A.get().strip() else 1.0)
+            Q = float(self.entry_Q.get().strip() if self.entry_Q.get().strip() else 1.0)
+            E_min = float(self.entry_E_min.get().strip() if self.entry_E_min.get().strip() else 0.1)
+            E_max = float(self.entry_E_max.get().strip() if self.entry_E_max.get().strip() else 10.0)
+            
+            sampling_mode = SamplingMode.from_label(self.combo_sampling.get())
+
+            if self.edit_index is not None:
+                # TRYB EDYCJI: Przypisanie czystych wartości (BEZ PRZECINKÓW NA KOŃCU!)
+                p = self.vm.parabolas_list[self.edit_index]
+                p.name = name
+                p.A = A
+                p.Q = Q
+                p.E_min = E_min
+                p.E_max = E_max
+                p.sampling_mode = sampling_mode
+                
+                # Przeliczenie i odświeżenie w tle
+                self.vm._notify_status_change(f"Zaktualizowano parametry dla {p.name}. Trwa przeliczanie...")
+                self.vm.recalculate_single_parabola(self.edit_index)
+            else:
+                # TRYB TWORZENIA NOWEJ PARABOLI
+                new_parabola = ParabolaConfig(name, A, Q, E_min, E_max, sampling_mode)
+                self.vm.add_parabola(new_parabola)
+                
+            self.destroy()
+            
+        except ValueError as e:
+            print(f"Błąd walidacji formularza: {e}")

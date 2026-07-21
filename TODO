@@ -10,16 +10,19 @@
 
 #13.07.2026
 TODO:
-- energy should work -> half done
-- model MVVM should be implemented
+- energy should work -> done
+- model MVVM should be implemented -> done 16.07
 - root files
 - energy plot -> done
-- delete/edit parabole -> it would be nice to have list of parabole and had possiblity to delete them
+- delete/edit parabole -> it would be nice to have list of parabole and had possiblity to delete them -> Done -> Bug not refresh after edit
 - background delete -> problematic -> lots of places would need to do the same work
-- going through every picture in folder with the same settings
-- tof
+- going through every picture in folder with the same settings -> Done propably 16.07-21.07
+- tof -> Done 21.07
 
-- list of parabola with pin so u can compare this with from other picture
+- list of parabola with pin so u can compare this with from other picture -> Done 21.07
+
+-make a place for plots a little bigger and a little smaller bottom part
+- problem with energy in low energy there is a peak and propably it is one point so it is error of calculation -> What to do with it
 
 NOTE:
 - rotation is made by operation on NDArray so it is fairly quick
