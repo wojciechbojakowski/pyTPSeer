@@ -8,9 +8,10 @@ class BottomControlFrame(ctk.CTkFrame):
         """
         Dolny panel sterowania sesją (Folder, Kalibracja rotacji, Lista parabol).
         """
-        super().__init__(master, height=100, **kwargs)
+        super().__init__(master, height=200, **kwargs)
         self.vm = viewmodel
         self.selected_parabola_idx = None  # Indeks aktualnie edytowanej paraboli
+        self.grid_propagate(False)
 
         # Konfiguracja siatki (3 główne kolumny o różnych wagach)
         self.grid_columnconfigure(0, weight=2)  # Folder (Średnia)
@@ -42,16 +43,13 @@ class BottomControlFrame(ctk.CTkFrame):
 
         # Separator pionowy 1
         self.sep1 = ctk.CTkFrame(self, width=2, fg_color="#444444")
-        self.sep1.grid(row=0, column=0, sticky="nse", pady=15)
+        self.sep1.grid(row=0, column=0, sticky="nse", pady=8)
 
-        # =========================================================================
-        # KOLUMNA 2: INSPEKTOR PARABOLI / ROTACJA (ŚRODEK)
-        # =========================================================================
         # =========================================================================
         # KOLUMNA 2: INSPEKTOR PARABOLI / ROTACJA I TŁO (ŚRODEK)
         # =========================================================================
         self.tuning_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.tuning_frame.grid(row=0, column=1, sticky="nsew", padx=15, pady=10)
+        self.tuning_frame.grid(row=0, column=1, sticky="nsew", padx=15, pady=5)
         
         self.lbl_tuning_title = ctk.CTkLabel(self.tuning_frame, text="🎯 Kalibracja aktywnego śladu", font=ctk.CTkFont(weight="bold"))
         self.lbl_tuning_title.pack(anchor="w", pady=(0, 5))
@@ -65,8 +63,8 @@ class BottomControlFrame(ctk.CTkFrame):
         
         self.rot_slider = ctk.CTkSlider(
             self.slider_frame, 
-            from_=-10.0, 
-            to=10.0, 
+            from_=-5.0, 
+            to=5.0, 
             number_of_steps=2000, 
             command=self._on_slider_move
         )
@@ -98,10 +96,10 @@ class BottomControlFrame(ctk.CTkFrame):
             self.bg_subframe, 
             from_=0.0, 
             to=1.0,  # Zakres dynamicznie aktualizowany w load_image
-            number_of_steps=500, 
+            number_of_steps=1000, 
             command=self._on_bg_slider_move
         )
-        self.slider_bg.set(0.0)
+        self.slider_bg.set(0.00)
         self.slider_bg.pack(side="left", fill="x", expand=True, padx=(0, 10))
         
         # Obliczenia tła również wykonujemy dopiero po puszczeniu suwaka, by zapobiec lagom!
@@ -119,12 +117,12 @@ class BottomControlFrame(ctk.CTkFrame):
         # KOLUMNA 3: PRZEWIJANA LISTA PARABOL (PRAWA STRONA)
         # =========================================================================
         self.list_container = ctk.CTkFrame(self, fg_color="transparent")
-        self.list_container.grid(row=0, column=2, sticky="nsew", padx=15, pady=10)
+        self.list_container.grid(row=0, column=2, sticky="nsew", padx=15, pady=8)
         
         self.lbl_list_title = ctk.CTkLabel(self.list_container, text="📊 Aktywne trajektorie jonów", font=ctk.CTkFont(weight="bold"))
         self.lbl_list_title.pack(anchor="w", pady=(0, 5))
         
-        self.scroll_list = ctk.CTkScrollableFrame(self.list_container, height=70, label_text="")
+        self.scroll_list = ctk.CTkScrollableFrame(self.list_container, height=60, label_text="")
         self.scroll_list.pack(fill="both", expand=True)
 
         # =========================================================================

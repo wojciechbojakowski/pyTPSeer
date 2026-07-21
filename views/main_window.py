@@ -56,7 +56,7 @@ class MainWindow(ctk.CTk):
         # 3. RZĄD DOLNY: Przeglądarka folderu, rotacja i lista parabol
         # =========================================================================
         self.bottom_control = BottomControlFrame(master=self, viewmodel=self.vm)
-        self.bottom_control.grid(row=2, column=0, columnspan=2, sticky="ew", padx=5, pady=5)
+        self.bottom_control.grid(row=2, column=0, columnspan=2, sticky="ew", padx=5, pady=1)
 
         self.plot_frame.canvas.mpl_connect('button_press_event', self._on_plot_click)
         # =========================================================================

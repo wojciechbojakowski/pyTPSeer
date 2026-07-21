@@ -21,7 +21,8 @@ TODO:
 
 - list of parabola with pin so u can compare this with from other picture -> Done 21.07
 
-- make a place for plots a little bigger and a little smaller bottom part
+- make a place for plots a little bigger and a little smaller bottom part -> Done stupidly but it works for now
+
 - problem with energy in low energy there is a peak and propably it is one point so it is error of calculation -> What to do with it -> after using background and min energy it is not there
 
 ADD export and import TPS parameters to text file -> import done 21.07 TODO doc
