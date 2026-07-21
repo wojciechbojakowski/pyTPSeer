@@ -25,7 +25,7 @@ class WorkspaceViewModel:
         self._status_change_callbacks: list[Callable[[str], None]] = []
 
 
-        self.pinned_spectra: dict[str, tuple[np.ndarray, npParabolaConfig.ndarray, str]] = {}
+        self.pinned_spectra: dict[str, tuple[np.ndarray, np.ndarray, str]] = {}
 
     # =========================================================================
     # BIND with look
