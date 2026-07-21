@@ -1,5 +1,6 @@
 # pyTPSeer 🚀
-> **Oprogramowanie do analizy i obróbki widm z Thomson Parabola Spectrometer (TPS)**
+
+**Oprogramowanie do analizy i obróbki widm z Thomson Parabola Spectrometer (TPS)**
 
 `pyTPSeer` to desktopowa aplikacja naukowa napisana w języku Python, przeznaczona do kalibracji, symulacji trajektorii jonów oraz ekstrakcji różniczkowych widm energetycznych ($dN/dE$) i widm czasu przelotu (**TOF**) z kadrów detektorów MCP.
 
@@ -94,5 +95,3 @@ pyTPSeer/
 ## 📜 Licencja
 
 Projekt udostępniany na licencji MIT / Akademickiej.
-
-```
