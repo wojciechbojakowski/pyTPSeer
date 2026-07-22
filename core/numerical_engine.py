@@ -4,19 +4,11 @@ import math
 from numba import njit
 import config
 
-# =========================================================================
-# I. PUBLICZNE PUNKTY WEJŚCIA DLA VIEWMODELU (POBIERAJĄ MODELE DATACLASS)
-# =========================================================================
-
 def draw_parabole_jit(tps, p_config, x_zero: float, y_zero: float, rotation_deg: float):
     """
-    Publiczny wrapper Pythona wywoływany przez ViewModel.
-    Pobiera czyste instancje modeli TPSParameters oraz ParabolaConfig,
-    wyciąga z nich surowe wartości liczbowe i przekazuje do szybkiego silnika JIT.
+    Public wrapper it take python code and puts into JIT code.
     """
-    sampling_mode_code = p_config.sampling_mode.code  # Pobranie kodu int z Enuma
-    print("LOG STARTING DRAW_PARABOLE_JIT 18")
-    # Wywołanie skompilowanego rdzenia
+    sampling_mode_code = p_config.sampling_mode.code  # Take int from enum //stupid python vs cpp
     x_points, y_points, E_sampling = _calculate_parabola_points(
         B=tps.B_field,
         E_field=tps.E_field,
@@ -32,21 +24,16 @@ def draw_parabole_jit(tps, p_config, x_zero: float, y_zero: float, rotation_deg:
         rotation_deg=rotation_deg,
         sampling_mode_code=sampling_mode_code
     )
-    print("LOG STARTING DRAW_PARABOLE_JIT 35")
     return x_points, y_points, E_sampling
 
 
 def extract_tps_spectrum_jit(img_matrix, x_m, y_m, E_arr, parabola_config, tps_params, threshold_grey=0.1, method="FlatBox"):
     """
-    Publiczny wrapper Pythona dla analizatora widma energii.
-    Odpytuje modele o niezbędną geometrię i uruchamia optymalizowaną pętlę.
+    Public wrapper
     """
-    # Mapowanie wybranej metody w GUI na flagę numeryczną dla Numby
     method_mapping = {"FlatBox": 0, "Gaussian": 1, "PinholeBackground": 2}
     scan_mode_flag = method_mapping.get(method, 0)
-    print("LOG extract_tps_spectrum_JIT 47")
     
-    # Wyciągamy surowe dane fizyczne z modeli dataclass
     mass_u = float(parabola_config.A)
     pin_d_m = float(tps_params.pin_d) * 0.001       # mm -> m
     pin_target = float(tps_params.pin_target)       # m
@@ -54,7 +41,6 @@ def extract_tps_spectrum_jit(img_matrix, x_m, y_m, E_arr, parabola_config, tps_p
     pixels_per_m = 1.0 / config.PX_TO_METER
     solid_angle = (math.pi * (pin_d_m / 2.0) ** 2) / (pin_target ** 2)
     
-    # Wywołanie wielowątkowego, skompilowanego rdzenia analizy obrazu
     energy_spectrum, dnde_spectrum = _extraction_core_loop(
         x_m=x_m,
         y_m=y_m,
@@ -67,12 +53,11 @@ def extract_tps_spectrum_jit(img_matrix, x_m, y_m, E_arr, parabola_config, tps_p
         pinhole_m=pin_d_m,
         scan_mode_flag=scan_mode_flag
     )
-    print("LOG extract_tps_spectrum_JIT 70")
     return energy_spectrum, dnde_spectrum
 
 
 # =========================================================================
-# II. SKOMPILOWANY SILNIK INTEGRACJI TRAJEKTORII (NUMBA JIT)
+#  (NUMBA JIT)
 # =========================================================================
 
 @njit(fastmath=True, nogil=True)
@@ -83,7 +68,6 @@ def _calculate_parabola_points(
     m_ion = A * config.M_ION
     q = Q * config.Q_ION
 
-    # Współczynniki klinowych okładzin elektrycznych
     if abs(Ze2 - Ze1) > 1e-12:
         Ae = (d2 - d1) / (Ze2 - Ze1)
     else:
@@ -93,7 +77,7 @@ def _calculate_parabola_points(
     t = np.linspace(0.0, 1.0, config.MAX_PTS)
     E = np.zeros(config.MAX_PTS)
 
-    # Wybór algorytmu próbkowania energii na podstawie kodu Enuma
+    
     if sampling_mode_code == 0:    # LINEAR
         E = E_min + t * (E_max - E_min)
     elif sampling_mode_code == 1:  # QUADRATIC
@@ -103,16 +87,16 @@ def _calculate_parabola_points(
     else:
         E = E_min + (t ** 2) * (E_max - E_min)
 
-    # Integracja równań ruchu (Pusher)
+    #integrate
     x_E, y_E = _particle_pusher_jit(
         E, E_field, m_ion, q, Zm1, Zm2, Ze1, Ze2, Zd, Ae, Be, B, config.MAX_TIME_STEPS, config.MAX_PTS, config.MeV_TO_J
     )
 
-    # Przesunięcie do fizycznego punktu zero spektrometru
+    #MOVE zero point
     x_E += x_zero
     y_E += y_zero
 
-    # Transformacja obrotu wokół punktu zero (start point)
+    # Rotation 
     rot = rotation_deg * (-0.0174532925)  # stopnie -> radiany
     dx = x_E - x_zero
     dy = y_E - y_zero
@@ -178,7 +162,7 @@ def _particle_pusher_jit(E, E_field, m_ion, q, Zm1, Zm2, Ze1, Ze2, Zd, Ae, Be, B
 
 
 # =========================================================================
-# III. SKOMPILOWANY SILNIK ANALIZY OBRAZU (NUMBA EXTRACTOR)
+# III. (NUMBA EXTRACTOR)
 # =========================================================================
 
 @njit(fastmath=True, nogil=True)
@@ -432,6 +416,5 @@ def calculate_tof_spectrum(E_array_MeV: np.ndarray, dNdE_array: np.ndarray, A: f
     dE_dt = (m_kg * (L_path_m ** 2)) / (t_seconds ** 3)
     signal_tof = dNdE_array * (dE_dt / config.MeV_TO_J)
 
-    # Sortujemy dane według rosnącego czasu t (bo wyższe energie docierają wcześniej!)
     sort_idx = np.argsort(t_ns)
     return t_ns[sort_idx], signal_tof[sort_idx]

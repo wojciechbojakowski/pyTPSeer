@@ -133,7 +133,6 @@ class WorkspaceViewModel:
         )
 
         if energies is not None and len(energies) > 0:
-            # Zakładamy dystans np. L = 1.0 m (można to wziąć z config.TPS_PARAMS)
             L_flight = self.tps_params.pin_target 
             
             p.cached_tof_t, p.cached_tof_signal = engine.calculate_tof_spectrum(
@@ -178,8 +177,6 @@ class WorkspaceViewModel:
     #             self._notify_status_change("Błąd: Nie można przypiąć pustego widma (najpierw wylicz ślad).")
                 
     #     self._notify_plots_update() # Odświeżamy wykresy, by narysować przypiętą linię
-    
-    # # viewmodels/workspace_vm.py
 
     def remove_pinned_spectrum(self, pin_key: str):
         """Usuwa konkretne widmo referencyjne i przerysowuje wykres 1D."""
@@ -218,7 +215,6 @@ class WorkspaceViewModel:
             
         self.mcp_model.background_threshold = float(threshold_val)
         
-        # Skoro zmieniliśmy tło obrazu, musimy przeliczyć wykresy energii/TOF dla wszystkich parabol!
         self.recalculate_all_parabolas()
 
     def export_spectrum_ascii(self, filepath: str):
