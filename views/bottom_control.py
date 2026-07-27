@@ -418,6 +418,17 @@ class BottomControlFrame(ctk.CTkFrame):
                 )
                 btn_pin.pack(side="right", padx=2)
 
+                btn_del = ctk.CTkButton(
+                    row, 
+                    text="🗑️", 
+                    width=26, 
+                    height=22,
+                    fg_color="#c0392b",
+                    hover_color="#962d22",
+                    command=lambda target=p, i=idx: self._on_delete_parabola_click(target, i)
+                )
+                btn_del.pack(side="right", padx=2)
+
         # Zabezpieczenie indeksu w kal
     # --- CALLBACKI DLA PRZYCISKÓW ---
 
@@ -436,3 +447,12 @@ class BottomControlFrame(ctk.CTkFrame):
     def _on_remove_pinned_click(self, pin_key: str):
         """Usuwa przypięte widmo referencyjne z bufora w ViewModelu."""
         self.vm.remove_pinned_spectrum(pin_key)
+
+    def _on_delete_parabola_click(self, parabola, idx: int):
+        """Usuwa parabolę i aktualizuje stan inspektora rotacji."""
+        if self.selected_parabola_idx == idx:
+            self._disable_inspector()
+        elif self.selected_parabola_idx is not None and self.selected_parabola_idx > idx:
+            self.selected_parabola_idx -= 1
+
+        self.vm.remove_parabola(parabola)

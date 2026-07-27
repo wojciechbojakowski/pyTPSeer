@@ -60,13 +60,18 @@ class WorkspaceViewModel:
         img = MCPImage.load_and_normalize(file_path)
         
         if img is not None:
+            if self.mcp_model is not None and self.mcp_model.start_point is not None:
+                img.start_point = self.mcp_model.start_point
             self.mcp_model = img
-            self.parabolas_list.clear()
-            self._notify_status_change(f"Załadowano kadr: {img.width}x{img.height}")
+            if self.parabolas_list:
+                self.recalculate_all_parabolas()
+            #self.parabolas_list.clear()
+            file_name = os.path.basename(file_path)
+            self._notify_status_change(f"Załadowano kadr: {file_name} {img.width}x{img.height}")
             self._notify_plots_update()
             max_intensity = float(np.max(self.mcp_model.raw_matrix))
         else:
-            self._notify_status_change("BŁĄD: Nie udało się wczytać pliku graficznego!")
+            self._notify_status_change("BŁĄD: Nie udało się wczytać pliku graficznego! {file_path}")
 
     def set_start_point(self, x_m: float, y_m: float):
         """Set zero point"""
@@ -262,3 +267,55 @@ class WorkspaceViewModel:
 
         except Exception as e:
             self._notify_status_change(f"Błąd eksportu ASCII: {e}")
+
+    
+    def export_batch_series(self, output_dir: str = None):
+        """
+        Automatycznie przetwarza wszystkie pliki graficzne w bieżącym folderze,
+        używając aktualnego punktu zero, parametrów TPS oraz zdefiniowanych parabol.
+        Zapisuje widma ASCII do katalogu wyjściowego.
+        """
+        if self.mcp_model is None or not self.parabolas_list:
+            self._notify_status_change("BŁĄD: Brak załadowanego obrazu lub parabol do przetwarzania!")
+            return
+
+        current_folder = os.path.dirname(self.mcp_model.file_path)
+        if output_dir is None:
+            output_dir = os.path.join(current_folder, "processed_spectra")
+        
+        os.makedirs(output_dir, exist_ok=True)
+
+        valid_exts = ('.tif', '.tiff', '.png', '.root')
+        files = sorted([f for f in os.listdir(current_folder) if f.lower().endswith(valid_exts)])
+
+        processed_count = 0
+
+        for file_name in files:
+            full_path = os.path.join(current_folder, file_name)
+            
+            # Ładujemy obraz i przeliczamy ekstrakcję widm
+            self.load_image(full_path)
+            
+            # Zapisujemy wyniki dla każdej paraboli
+            base_name = os.path.splitext(file_name)[0]
+            for p in self.parabolas_list:
+                if p.cached_spec_E is not None and len(p.cached_spec_E) > 0:
+                    out_file = os.path.join(output_dir, f"{base_name}_{p.name}_spectrum.dat")
+                    
+                    # Zapis kolumn: Energia [MeV/u], dN/dE [MeV^-1 sr^-1]
+                    data_to_save = np.column_stack((p.cached_spec_E, p.cached_spec_dNdE))
+                    header = f"Spectrum for {p.name} (A={p.A}, Q={p.Q})\nFile: {file_name}\nE_MeV/u\tdN/dE"
+                    np.savetxt(out_file, data_to_save, fmt="%.6e", delimiter="\t", header=header)
+
+            processed_count += 1
+
+        self._notify_status_change(f"Pomyślnie przetworzono serię {processed_count} plików -> {output_dir}")
+
+    
+    def remove_parabola(self, parabola):
+        """Usuwa wskazaną parabolę z listy sesji i odświeża wykresy."""
+        if parabola in self.parabolas_list:
+            self.parabolas_list.remove(parabola)
+            
+            self._notify_plots_update()
+            self._notify_status_change(f"Usunięto parabolę: {parabola.name}")
