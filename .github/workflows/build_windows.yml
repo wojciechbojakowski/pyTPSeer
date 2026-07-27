@@ -10,7 +10,8 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
-
+    permissions:
+        contents: write
     steps:
       - name: 📥 Klonowanie repozytorium
         uses: actions/checkout@v4
