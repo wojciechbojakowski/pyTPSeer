@@ -86,12 +86,17 @@ class MCPCanvas(BasePlotCanvas):
                 
         self.toolbar.pack(side="bottom", fill="x")
 
-    def draw_detector_frame(self, img_matrix, extent_sizes: list, start_point=None, cmap="inferno"):
+    def draw_detector_frame(self, img_matrix, cmap, extent_sizes: list, start_point=None):
         """Czyści tło i nanosi surowy obraz z detektora wraz ze skalą intensywności."""
+        old_xlim = self.ax.get_xlim()
+        old_ylim = self.ax.get_ylim()
+        
+        first_time = (old_xlim == (0.0, 1.0) and old_ylim == (0.0, 1.0))
+
         self.ax.clear()
         self._apply_dark_theme_styles()
 
-        im = self.ax.imshow(img_matrix, cmap=cmap, extent=extent_sizes)
+        im = self.ax.imshow(img_matrix, cmap=cmap, extent=extent_sizes, vmin=1e-6)
         self.ax.set_xlabel("X [m]")
         self.ax.set_ylabel("Y [m]")
         
@@ -101,6 +106,10 @@ class MCPCanvas(BasePlotCanvas):
             self.cbar.outline.set_edgecolor('#444444')
         else:
             self.cbar.update_normal(im)
+
+        if not first_time:
+            self.ax.set_xlim(old_xlim)
+            self.ax.set_ylim(old_ylim)
             
         self.cbar.ax.yaxis.set_tick_params(color='white', labelcolor='white')
         

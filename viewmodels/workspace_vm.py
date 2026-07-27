@@ -3,6 +3,8 @@ import os
 import threading
 from typing import Callable, Optional
 
+from matplotlib import pyplot as plt
+import copy
 import numpy as np
 from models.mcp_image import MCPImage
 from models.parabola_config import ParabolaConfig
@@ -19,7 +21,9 @@ class WorkspaceViewModel:
 
         # --- (UI STATE) ---
         self.is_selecting_start: bool = False
-        self.active_cmap: str = "inferno"
+
+        self.active_cmap=copy.copy(plt.cm.viridis)
+        self.active_cmap.set_under('white')
 
         # --- System EVENT ---
         self._plots_update_callbacks: list[Callable[[], None]] = []
@@ -319,3 +323,19 @@ class WorkspaceViewModel:
             
             self._notify_plots_update()
             self._notify_status_change(f"Usunięto parabolę: {parabola.name}")
+
+    def update_parabola_config(self, index: int, name: str, A: float, Q: float, E_min: float, E_max: float, sampling_mode):
+        """Modyfikuje istniejącą parabolę, przelicza jej trajektorię i odświeża wykresy."""
+        if 0 <= index < len(self.parabolas_list):
+            p = self.parabolas_list[index]
+            p.name = name
+            p.A = A
+            p.Q = Q
+            p.E_min = E_min
+            p.E_max = E_max
+            p.sampling_mode = sampling_mode
+            
+            self.recalculate_single_parabola(index)
+            
+            self._notify_plots_update()
+            self._notify_status_change(f"Zaktualizowano parametry dla {p.name}.")

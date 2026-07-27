@@ -340,18 +340,8 @@ class ParabolaConfigPopup(ctk.CTkToplevel):
             sampling_mode = SamplingMode.from_label(self.combo_sampling.get())
 
             if self.edit_index is not None:
-                # TRYB EDYCJI: Przypisanie czystych wartości (BEZ PRZECINKÓW NA KOŃCU!)
-                p = self.vm.parabolas_list[self.edit_index]
-                p.name = name
-                p.A = A
-                p.Q = Q
-                p.E_min = E_min
-                p.E_max = E_max
-                p.sampling_mode = sampling_mode
-                
-                # Przeliczenie i odświeżenie w tle
-                self.vm._notify_status_change(f"Zaktualizowano parametry dla {p.name}. Trwa przeliczanie...")
-                self.vm.recalculate_single_parabola(self.edit_index)
+                #EDITION MODE
+                self.vm.update_parabola_config(self.edit_index, name, A, Q, E_min, E_max, sampling_mode)
             else:
                 # TRYB TWORZENIA NOWEJ PARABOLI
                 new_parabola = ParabolaConfig(name, A, Q, E_min, E_max, sampling_mode)
