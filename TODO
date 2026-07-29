@@ -31,11 +31,11 @@ ADD END of Files in directory and same parameters and zero_point and parabola ->
 ADD template of parabola -> 21.07 added
 
 
-ADD calibration for MCP and other
+ADD calibration for MCP and other -> it is implemented in _psl_scaling in numerical_engine.py, it is in jit so propably interface for that would be nice
 ADD place where u can change power -> half done need a lot more test
 ADD place for change px/mm -> DONE
 ADD smoothing and change in number of points
-ADD changing energy figure
+ADD changing energy figure -> done -> for tests
 
 
 NOTE:

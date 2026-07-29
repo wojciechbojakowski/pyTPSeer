@@ -174,7 +174,7 @@ def _psl_from_grey(grey01):
 
 @njit(fastmath=True, nogil=True)
 def _psl_scaling(e_mev, mass_u):
-    """Charakterystyka czułości detektora obrazu (IP) dla różnych jonów."""
+    """Charakterystyka czułości detektora obrazu (IP) dla różnych jonów. -> Kalibracja można wrzucić własną"""
     if mass_u == 1.0:
         return 0.151 * (e_mev ** 0.6) if e_mev < 1.6 else 0.284 * (e_mev ** -0.75)
     if mass_u == 12.0:
@@ -206,16 +206,14 @@ def _scan_method_flat_box(img_matrix, x_center, y_center, dx, dy, norm, nx, ny, 
             pxf = x_center + s * (dx / norm) + w * nx
             pyf = y_center + s * (dy / norm) + w * ny
             
-            px, py = int(round(pxf)), int(round(pyf))
-            
-            if 0 <= px < x_pixels and 0 <= py < y_pixels:
-                img_y = y_pixels - 1 - py
-                grey = float(img_matrix[img_y, px])
-                psl = _psl_from_grey(grey) - psl_background
-                
-                if psl > 0.0:
-                    signal_psl += psl
-                    signal_n += 1
+            pyf_img = (y_pixels - 1.0) - pyf
+
+            grey = _bilinear_interpolate(img_matrix, pxf, pyf_img)
+
+            psl = _psl_from_grey(grey) - psl_background
+            if psl > 0.0:
+                signal_psl += psl
+                signal_n += 1
                     
     return signal_psl, signal_n
 
@@ -234,17 +232,14 @@ def _scan_method_gaussian_profile(img_matrix, x_center, y_center, dx, dy, norm, 
             pxf = x_center + s * (dx / norm) + w * nx
             pyf = y_center + s * (dy / norm) + w * ny
             
-            px, py = int(round(pxf)), int(round(pyf))
-            
-            if 0 <= px < x_pixels and 0 <= py < y_pixels:
-                img_y = y_pixels - 1 - py
-                grey = float(img_matrix[img_y, px])
-                psl = _psl_from_grey(grey) - psl_background
-                
-                if psl > 0.0:
-                    gaussian_weight = math.exp(-0.5 * (float(w) / sigma) ** 2)
-                    signal_psl += psl * gaussian_weight
-                    signal_n += 1
+            pyf_img = (y_pixels - 1.0) - pyf
+            grey = _bilinear_interpolate(img_matrix, pxf, pyf_img)
+
+            psl = _psl_from_grey(grey) - psl_background
+            if psl > 0.0:
+                gaussian_weight = math.exp(-0.5 * (float(w) / sigma) ** 2)
+                signal_psl += psl * gaussian_weight
+                signal_n += 1
                     
     return signal_psl, signal_n
 
@@ -419,3 +414,40 @@ def calculate_tof_spectrum(E_array_MeV: np.ndarray, dNdE_array: np.ndarray, A: f
 
     sort_idx = np.argsort(t_ns)
     return t_ns[sort_idx], signal_tof[sort_idx]
+
+
+
+@njit(fastmath=True, nogil=True)
+def _bilinear_interpolate(img_matrix, x, y):
+    """Interpolacja dwuliniowa (order=1) dla ciągłych współrzędnych (x, y) w Numbie. Nadzieja na rozwiązanie problemów z błedami numerycznymi"""
+    y_pixels, x_pixels = img_matrix.shape
+
+    # Warunek brzegowy – poza obrazem
+    if x < 0.0 or x >= x_pixels - 1.0 or y < 0.0 or y >= y_pixels - 1.0:
+        if 0.0 <= x < x_pixels and 0.0 <= y < y_pixels:
+            return float(img_matrix[int(y), int(x)])
+        return 0.0
+
+    # Paski 4 sąsiednich pikseli
+    x0 = int(math.floor(x))
+    x1 = x0 + 1
+    y0 = int(math.floor(y))
+    y1 = y0 + 1
+
+    # Wagi interpolacji
+    wx = x - x0
+    wy = y - y0
+
+    # Pobranie 4 wartości z macierzy
+    v00 = float(img_matrix[y0, x0])
+    v01 = float(img_matrix[y0, x1])
+    v10 = float(img_matrix[y1, x0])
+    v11 = float(img_matrix[y1, x1])
+
+    # Wzór dwuliniowy
+    return (
+        v00 * (1.0 - wx) * (1.0 - wy)
+        + v01 * wx * (1.0 - wy)
+        + v10 * (1.0 - wx) * wy
+        + v11 * wx * wy
+    )

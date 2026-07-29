@@ -2,7 +2,7 @@
 import customtkinter as ctk
 from views.top_bar import TopBarFrame         
 from views.bottom_control import BottomControlFrame
-from views.plot_canvas import MCPCanvas, PlotCanvas1D
+from views.plot_canvas import MCPCanvas, PlotCanvas1D, SpectrumPlotCanvas
 from viewmodels.workspace_vm import WorkspaceViewModel
 import config
 
@@ -42,7 +42,7 @@ class MainWindow(ctk.CTk):
         self.right_plots_container.grid_columnconfigure(0, weight=1)
         
         #ENERGY
-        self.spectrum_frame = PlotCanvas1D(master=self.right_plots_container,is_log_y=True)
+        self.spectrum_frame = SpectrumPlotCanvas(master=self.right_plots_container, viewmodel=self.vm)
         self.spectrum_frame.grid(row=0, column=0, sticky="nsew", padx=0, pady=5)
         
         #TOF

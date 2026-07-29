@@ -185,16 +185,17 @@ class PlotCanvas1D(BasePlotCanvas):
             return False
 
 
-class SpectrumPlotCanvas(ctk.CTkFrame):
-    def __init__(self, master, viewmodel, **kwargs):
-        super().__init__(master, **kwargs)
+class SpectrumPlotCanvas(PlotCanvas1D):
+    def __init__(self, master, viewmodel, is_log_y: bool = True, **kwargs):
+        """
+        Dedykowane płótno wykresu widma (1D) w pełni kompatybilne z PlotCanvas1D,
+        wzbogacone o interaktywne menu kontekstowe (prawy przycisk myszy).
+        """
+        # Inicjalizacja klasy bazowej PlotCanvas1D
+        super().__init__(master, is_log_y=is_log_y, **kwargs)
         self.vm = viewmodel
-        
-        # ... inicjalizacja matplotlib figure i canvas ...
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self)
-        self.canvas.get_tk_widget().pack(fill="both", expand=True)
 
-        # 🖱️ Bindowanie prawego przycisku myszy
+        # 🖱️ Bindowanie prawego przycisku myszy na płótnie Tkinter Matplotlib
         self.canvas.get_tk_widget().bind("<Button-3>", self._show_context_menu)
         
         # Tworzymy menu kontekstowe
@@ -207,37 +208,43 @@ class SpectrumPlotCanvas(ctk.CTkFrame):
         self.context_menu.add_command(label="↺ Resetuj widok (Autoscale)", command=self._reset_view)
 
     def _show_context_menu(self, event):
-        """Wyświetla menu w miejscu kliknięcia kursora."""
+        """Wyświetla menu kontekstowe w miejscu kliknięcia kursora."""
         try:
             self.context_menu.tk_popup(event.x_root, event.y_root)
         finally:
             self.context_menu.grab_release()
 
     def _set_y_scale(self, scale_type: str):
-        """Zmienia skalę osi Y (linear / log)."""
+        """Zmienia skalę osi Y (linear / log) i flaga logarytmiczna."""
+        self.is_log_y = (scale_type == 'log')
         self.ax.set_yscale(scale_type)
         self.canvas.draw_idle()
 
     def _reset_view(self):
-        """Autoskalowanie osi."""
+        """Resetuje zakresy osi (Autoskalowanie)."""
         self.ax.relim()
-        self.ax.autoscale()
+        self.ax.autoscale_view()
         self.canvas.draw_idle()
 
     def _popup_axis_limits(self):
-        """Popup do precyzyjnego wpisania wartości X_min, X_max, Y_min, Y_max."""
+        """Otwiera okno dialogowe do ręcznego wpisania limitów osi."""
         dialog = AxisLimitsDialog(self, current_xlim=self.ax.get_xlim(), current_ylim=self.ax.get_ylim())
+        self.wait_window(dialog)  # Czekamy na zamknięcie okna
         if dialog.result:
             xlim, ylim = dialog.result
-            if xlim: self.ax.set_xlim(xlim)
-            if ylim: self.ax.set_ylim(ylim)
+            if xlim: 
+                self.ax.set_xlim(xlim)
+            if ylim: 
+                self.ax.set_ylim(ylim)
             self.canvas.draw_idle()
+
 
 class AxisLimitsDialog(ctk.CTkToplevel):
     def __init__(self, master, current_xlim, current_ylim):
         super().__init__(master)
         self.title("Zakresy osi")
         self.geometry("280x220")
+        self.resizable(False, False)
         self.result = None
         self.grab_set()
 
@@ -247,14 +254,20 @@ class AxisLimitsDialog(ctk.CTkToplevel):
         self.entry_ymin = self._add_row("dN/dE min:", f"{current_ylim[0]:.2e}")
         self.entry_ymax = self._add_row("dN/dE max:", f"{current_ylim[1]:.2e}")
 
-        btn = ctk.CTkButton(self, text="Zastosuj", command=self._apply)
-        btn.pack(pady=10)
+        btn_frame = ctk.CTkFrame(self, fg_color="transparent")
+        btn_frame.pack(fill="x", pady=10, padx=15)
+
+        btn_apply = ctk.CTkButton(btn_frame, text="Zastosuj", command=self._apply, fg_color="#2b73b5", hover_color="#225c91")
+        btn_apply.pack(side="right", padx=2)
+
+        btn_cancel = ctk.CTkButton(btn_frame, text="Anuluj", command=self.destroy, fg_color="#444444", hover_color="#555555", width=70)
+        btn_cancel.pack(side="right", padx=2)
 
     def _add_row(self, label, val):
         f = ctk.CTkFrame(self, fg_color="transparent")
-        f.pack(fill="x", padx=15, pady=2)
+        f.pack(fill="x", padx=15, pady=3)
         ctk.CTkLabel(f, text=label, width=90, anchor="w").pack(side="left")
-        e = ctk.CTkEntry(f, height=24)
+        e = ctk.CTkEntry(f, height=26)
         e.insert(0, val)
         e.pack(side="right", fill="x", expand=True)
         return e
