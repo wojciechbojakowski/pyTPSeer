@@ -71,7 +71,7 @@ class MainWindow(ctk.CTk):
             return
 
         h, w = self.vm.mcp_model.shape
-        extent_sizes = [0, w * config.PX_TO_METER, 0, h * config.PX_TO_METER]
+        extent_sizes = [0, w * self.vm.tps_params.PX_TO_METERS(), 0, h * self.vm.tps_params.PX_TO_METERS()]
 
         self.plot_frame.draw_detector_frame(
             img_matrix=self.vm.mcp_model.matrix, 

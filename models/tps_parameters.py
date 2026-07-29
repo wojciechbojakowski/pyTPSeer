@@ -1,5 +1,6 @@
 #models/tps_parameters.py
 from dataclasses import dataclass
+from config import PIXELS_PER_MM
 
 @dataclass
 class TPSParameters:
@@ -14,6 +15,7 @@ class TPSParameters:
     Zd:         float = 0.269
     pin_d:      float = 0.157
     pin_target: float = 1.0
+    Par_pxtomm:   int   = int(PIXELS_PER_MM)
 
     def update(self, **kwargs):
         for key, value in kwargs.items():
@@ -62,3 +64,16 @@ class TPSParameters:
         except Exception as e:
             print(f"No file found at the specified path. Error: {e}")
             return None
+
+
+    def change_pxmm(self, new:int):
+        self.Par_pxtomm = new
+
+    def px_to_mm(self, px_val: float) -> float:
+        return px_val / self.Par_pxtomm
+
+    def mm_to_px(self, mm_val: float) -> float:
+        return mm_val * self.Par_pxtomm
+
+    def PX_TO_METERS(self):
+        return 1.0 / (self.Par_pxtomm * 1000.0)

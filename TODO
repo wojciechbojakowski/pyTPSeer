@@ -30,6 +30,14 @@ ADD saving plots -> DONE 21.07 but to check how long ascii should be
 ADD END of Files in directory and same parameters and zero_point and parabola -> No end of files and no active waiting for new files but same parameters implemented 27.07
 ADD template of parabola -> 21.07 added
 
+
+ADD calibration for MCP and other
+ADD place where u can change power -> half done need a lot more test
+ADD place for change px/mm -> DONE
+ADD smoothing and change in number of points
+ADD changing energy figure
+
+
 NOTE:
 - rotation is made by operation on NDArray so it is fairly quick
 - rotation paramter is not realy global parameter but it is connected to one parabola

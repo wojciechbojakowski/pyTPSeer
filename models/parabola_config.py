@@ -10,8 +10,10 @@ class ParabolaConfig:
     Q:     float
     E_min: float
     E_max: float
-
+    
     sampling_mode: SamplingMode
+
+    power_exponent: float = 2.0
 
     rotation_parameter: float = 0.0 #In experiment it is not global parameter, it theory it is
 

@@ -3,6 +3,7 @@ import customtkinter as ctk
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+import tkinter as tk
 
 # =========================================================================
 # 1. BAZOWA KLASA (Wspólna kuchnia Tkintera i Matplotlib)
@@ -182,3 +183,87 @@ class PlotCanvas1D(BasePlotCanvas):
         except Exception as e:
             print(f"Błąd zapisu obrazu PNG: {e}")
             return False
+
+
+class SpectrumPlotCanvas(ctk.CTkFrame):
+    def __init__(self, master, viewmodel, **kwargs):
+        super().__init__(master, **kwargs)
+        self.vm = viewmodel
+        
+        # ... inicjalizacja matplotlib figure i canvas ...
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self)
+        self.canvas.get_tk_widget().pack(fill="both", expand=True)
+
+        # 🖱️ Bindowanie prawego przycisku myszy
+        self.canvas.get_tk_widget().bind("<Button-3>", self._show_context_menu)
+        
+        # Tworzymy menu kontekstowe
+        self.context_menu = tk.Menu(self, tearoff=0, bg="#2b2b2b", fg="white", activebackground="#2b73b5")
+        self.context_menu.add_command(label="🔍 Ustaw zakresy osi (Limits)...", command=self._popup_axis_limits)
+        self.context_menu.add_separator()
+        self.context_menu.add_command(label="📈 Skala Y: Liniowa", command=lambda: self._set_y_scale('linear'))
+        self.context_menu.add_command(label="📊 Skala Y: Logarytmiczna (log10)", command=lambda: self._set_y_scale('log'))
+        self.context_menu.add_separator()
+        self.context_menu.add_command(label="↺ Resetuj widok (Autoscale)", command=self._reset_view)
+
+    def _show_context_menu(self, event):
+        """Wyświetla menu w miejscu kliknięcia kursora."""
+        try:
+            self.context_menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            self.context_menu.grab_release()
+
+    def _set_y_scale(self, scale_type: str):
+        """Zmienia skalę osi Y (linear / log)."""
+        self.ax.set_yscale(scale_type)
+        self.canvas.draw_idle()
+
+    def _reset_view(self):
+        """Autoskalowanie osi."""
+        self.ax.relim()
+        self.ax.autoscale()
+        self.canvas.draw_idle()
+
+    def _popup_axis_limits(self):
+        """Popup do precyzyjnego wpisania wartości X_min, X_max, Y_min, Y_max."""
+        dialog = AxisLimitsDialog(self, current_xlim=self.ax.get_xlim(), current_ylim=self.ax.get_ylim())
+        if dialog.result:
+            xlim, ylim = dialog.result
+            if xlim: self.ax.set_xlim(xlim)
+            if ylim: self.ax.set_ylim(ylim)
+            self.canvas.draw_idle()
+
+class AxisLimitsDialog(ctk.CTkToplevel):
+    def __init__(self, master, current_xlim, current_ylim):
+        super().__init__(master)
+        self.title("Zakresy osi")
+        self.geometry("280x220")
+        self.result = None
+        self.grab_set()
+
+        # Pola E_min, E_max, dN/dE_min, dN/dE_max z wpisanymi obecnymi granicami
+        self.entry_xmin = self._add_row("E min:", f"{current_xlim[0]:.3f}")
+        self.entry_xmax = self._add_row("E max:", f"{current_xlim[1]:.3f}")
+        self.entry_ymin = self._add_row("dN/dE min:", f"{current_ylim[0]:.2e}")
+        self.entry_ymax = self._add_row("dN/dE max:", f"{current_ylim[1]:.2e}")
+
+        btn = ctk.CTkButton(self, text="Zastosuj", command=self._apply)
+        btn.pack(pady=10)
+
+    def _add_row(self, label, val):
+        f = ctk.CTkFrame(self, fg_color="transparent")
+        f.pack(fill="x", padx=15, pady=2)
+        ctk.CTkLabel(f, text=label, width=90, anchor="w").pack(side="left")
+        e = ctk.CTkEntry(f, height=24)
+        e.insert(0, val)
+        e.pack(side="right", fill="x", expand=True)
+        return e
+
+    def _apply(self):
+        try:
+            xlim = (float(self.entry_xmin.get()), float(self.entry_xmax.get()))
+            ylim = (float(self.entry_ymin.get()), float(self.entry_ymax.get()))
+            self.result = (xlim, ylim)
+        except ValueError:
+            pass
+        self.destroy()

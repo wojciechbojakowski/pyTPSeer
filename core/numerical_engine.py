@@ -22,7 +22,8 @@ def draw_parabole_jit(tps, p_config, x_zero: float, y_zero: float, rotation_deg:
         E_min=p_config.E_min,
         E_max=p_config.E_max,
         rotation_deg=rotation_deg,
-        sampling_mode_code=sampling_mode_code
+        sampling_mode_code=sampling_mode_code,
+        gamma=p_config.power_exponent
     )
     return x_points, y_points, E_sampling
 
@@ -63,7 +64,7 @@ def extract_tps_spectrum_jit(img_matrix, x_m, y_m, E_arr, parabola_config, tps_p
 @njit(fastmath=True, nogil=True)
 def _calculate_parabola_points(
     B, E_field, Zm1, Zm2, Ze1, Ze2, d1, d2, Zd,
-    x_zero, y_zero, A, Q, E_min, E_max, rotation_deg, sampling_mode_code, gamma=1.0
+    x_zero, y_zero, A, Q, E_min, E_max, rotation_deg, sampling_mode_code, gamma=2.0
 ):
     m_ion = A * config.M_ION
     q = Q * config.Q_ION

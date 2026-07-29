@@ -324,7 +324,7 @@ class WorkspaceViewModel:
             self._notify_plots_update()
             self._notify_status_change(f"Usunięto parabolę: {parabola.name}")
 
-    def update_parabola_config(self, index: int, name: str, A: float, Q: float, E_min: float, E_max: float, sampling_mode):
+    def update_parabola_config(self, index: int, name: str, A: float, Q: float, E_min: float, E_max: float, sampling_mode, gamma: float):
         """Modyfikuje istniejącą parabolę, przelicza jej trajektorię i odświeża wykresy."""
         if 0 <= index < len(self.parabolas_list):
             p = self.parabolas_list[index]
@@ -334,6 +334,7 @@ class WorkspaceViewModel:
             p.E_min = E_min
             p.E_max = E_max
             p.sampling_mode = sampling_mode
+            p.power_exponent = gamma
             
             self.recalculate_single_parabola(index)
             

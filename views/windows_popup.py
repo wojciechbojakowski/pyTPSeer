@@ -4,6 +4,7 @@ from tkinter import filedialog
 from viewmodels.workspace_vm import WorkspaceViewModel
 from models.parabola_config import ParabolaConfig
 from models.sampling_mode import SamplingMode
+from config import PIXELS_PER_MM
 
 # =========================================================================
 # 1. POPUP: PARAMETRY SPRZĘTOWE KOMORY TPS
@@ -47,6 +48,9 @@ class HardwareParamsPopup(ctk.CTkToplevel):
         self.entry_d2 = self._create_field(self.col2_frame, "Szczelina wyjściowa d2 [m]:", "d2", self.vm.tps_params.d2)
         self.entry_pin_d = self._create_field(self.col2_frame, "Średnica pinhole [mm]:", "pin_d", self.vm.tps_params.pin_d)
         self.entry_pin_target = self._create_field(self.col2_frame, "Dystans Target-Pinhole [m]:", "pin_target", self.vm.tps_params.pin_target)
+
+        self.entry_px_mm = self._create_field(self.col2_frame, "Rozdzielczość detektora [px/mm]:", PIXELS_PER_MM, self.vm.tps_params.Par_pxtomm)
+
 
         # --- DOLNY PANEL Z PRZYCISKAMI ---
         self.btn_frame = ctk.CTkFrame(self, fg_color="transparent")
@@ -100,7 +104,9 @@ class HardwareParamsPopup(ctk.CTkToplevel):
         }
         # ViewModel zajmie się walidacją. Jeśli wpisano błąd, informacja pojawi się na pasku statusu
         self.vm.update_hardware_parameters(gui_data)
+        self.vm.tps_params.change_pxmm(int(self.entry_px_mm.get().strip()))
         self.destroy()
+        
     def _on_open_file_click(self):
         """Opeeration of loading a txt file with parameters for TPS"""
         filepath = filedialog.askopenfilename(
@@ -297,6 +303,15 @@ class ParabolaConfigPopup(ctk.CTkToplevel):
         self.combo_sampling = ctk.CTkComboBox(row_enum, values=enum_labels, height=26)
         self.combo_sampling.set(SamplingMode.QUADRATIC.label)
         self.combo_sampling.pack(side="right", fill="x", expand=True)
+
+        self.row_power = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        ctk.CTkLabel(self.row_power, text="Wykładnik potęgi (p):", anchor="w", width=140).pack(side="left")
+        self.entry_power = ctk.CTkEntry(self.row_power, placeholder_text="2.0", height=26)
+        self.entry_power.insert(0, str(getattr(self.vm.parabolas_list[self.edit_index], 'power_exponent', 2.0) if self.edit_index is not None else 2.0))
+        self.entry_power.pack(side="right", fill="x", expand=True)
+        
+        self.combo_sampling.configure(command=self._on_sampling_changed)
+        self._on_sampling_changed(self.combo_sampling.get())
         
         # --- PRZYCISKI AKCJI ---
         self.btn_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
@@ -338,16 +353,25 @@ class ParabolaConfigPopup(ctk.CTkToplevel):
             E_max = float(self.entry_E_max.get().strip() if self.entry_E_max.get().strip() else 10.0)
             
             sampling_mode = SamplingMode.from_label(self.combo_sampling.get())
+            gamma = int(self.entry_power.get().strip() if self.entry_power.get().strip() else 2)
 
             if self.edit_index is not None:
                 #EDITION MODE
-                self.vm.update_parabola_config(self.edit_index, name, A, Q, E_min, E_max, sampling_mode)
+                self.vm.update_parabola_config(self.edit_index, name, A, Q, E_min, E_max, sampling_mode, gamma)
             else:
                 # TRYB TWORZENIA NOWEJ PARABOLI
-                new_parabola = ParabolaConfig(name, A, Q, E_min, E_max, sampling_mode)
+                new_parabola = ParabolaConfig(name, A, Q, E_min, E_max, sampling_mode, gamma)
                 self.vm.add_parabola(new_parabola)
                 
             self.destroy()
             
         except ValueError as e:
             print(f"Błąd walidacji formularza: {e}")
+
+
+    def _on_sampling_changed(self, choice):
+        """Pokazuje pole wykładnika p tylko gdy wybrano próbkowanie potęgowe."""
+        if "potęg" in choice.lower() or "power" in choice.lower():
+            self.row_power.pack(fill="x", pady=5)
+        else:
+            self.row_power.pack_forget()

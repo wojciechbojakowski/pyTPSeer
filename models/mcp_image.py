@@ -54,12 +54,12 @@ class MCPImage:
             print(f"No image found at the specified path. Error: {e}")
             return None
 
-    def get_pixel_value_at_meters(self, x_meters, y_meters, px_to_meter=PX_TO_METER):
-        px_x = int(round(x_meters / px_to_meter))
-        px_y = int(round(y_meters / px_to_meter))
+    # def get_pixel_value_at_meters(self, x_meters, y_meters, px_to_meter=PX_TO_METER):
+    #     px_x = int(round(x_meters / px_to_meter))
+    #     px_y = int(round(y_meters / px_to_meter))
         
-        h, w = self.shape
-        img_y = h - 1 - px_y
-        if 0 <= px_x < w and 0 <= img_y < h:
-            return self.raw_matrix[img_y, px_x], px_x, img_y
-        return None, None, None
+    #     h, w = self.shape
+    #     img_y = h - 1 - px_y
+    #     if 0 <= px_x < w and 0 <= img_y < h:
+    #         return self.raw_matrix[img_y, px_x], px_x, img_y
+    #     return None, None, None
