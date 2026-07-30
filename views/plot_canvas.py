@@ -5,6 +5,8 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 import tkinter as tk
 
+from models.sampling_mode import SmoothingMode
+
 # =========================================================================
 # 1. BAZOWA KLASA (Wspólna kuchnia Tkintera i Matplotlib)
 # =========================================================================
@@ -197,6 +199,7 @@ class SpectrumPlotCanvas(PlotCanvas1D):
 
         # 🖱️ Bindowanie prawego przycisku myszy na płótnie Tkinter Matplotlib
         self.canvas.get_tk_widget().bind("<Button-3>", self._show_context_menu)
+
         
         # Tworzymy menu kontekstowe
         self.context_menu = tk.Menu(self, tearoff=0, bg="#2b2b2b", fg="white", activebackground="#2b73b5")
@@ -207,6 +210,15 @@ class SpectrumPlotCanvas(PlotCanvas1D):
         self.context_menu.add_separator()
         self.context_menu.add_command(label="↺ Resetuj widok (Autoscale)", command=self._reset_view)
 
+        self.smooth_menu = tk.Menu(self.context_menu, tearoff=0, bg="#2b2b2b", fg="white", activebackground="#2b73b5")
+        self.smooth_menu.add_radiobutton(label="Brak (Surowy sygnał)", command=lambda: self._set_smoothing(SmoothingMode.NONE))
+        self.smooth_menu.add_radiobutton(label="Savitzky-Golay", command=lambda: self._set_smoothing(SmoothingMode.SAVGOL))
+        self.smooth_menu.add_radiobutton(label="Gauss", command=lambda: self._set_smoothing(SmoothingMode.GAUSSIAN))
+
+        self.context_menu.add_cascade(label="🧹 Wygładzanie (Smoothing)", menu=self.smooth_menu)
+        self.context_menu.add_separator()
+
+        
     def _show_context_menu(self, event):
         """Wyświetla menu kontekstowe w miejscu kliknięcia kursora."""
         try:
@@ -238,6 +250,9 @@ class SpectrumPlotCanvas(PlotCanvas1D):
                 self.ax.set_ylim(ylim)
             self.canvas.draw_idle()
 
+    def _set_smoothing(self, mode: SmoothingMode):
+        """GUI jedynie przekazuje intencję użytkownika do ViewModelu."""
+        self.vm.set_spectrum_smoothing(mode)
 
 class AxisLimitsDialog(ctk.CTkToplevel):
     def __init__(self, master, current_xlim, current_ylim):

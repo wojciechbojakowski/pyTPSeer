@@ -6,7 +6,7 @@ M_ION = 1.67e-27  # kg, mass of a proton (ion)
 Q_ION = 1.60217662e-19  # C, charge of a proton (ion)
 MeV_TO_J = 1.6e-13  # Conversion factor from MeV to Joules
 
-MAX_PTS = 5000
+MAX_PTS = 500
 MAX_TIME_STEPS = 1000
 
 # GUI settings

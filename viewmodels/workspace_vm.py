@@ -6,8 +6,10 @@ from typing import Callable, Optional
 from matplotlib import pyplot as plt
 import copy
 import numpy as np
+from core.signal_processing import apply_spectrum_smoothing
 from models.mcp_image import MCPImage
 from models.parabola_config import ParabolaConfig
+from models.sampling_mode import SmoothingMode
 from models.tps_parameters import TPSParameters
 import core.numerical_engine as engine
 import config
@@ -25,6 +27,9 @@ class WorkspaceViewModel:
         self.active_cmap=copy.copy(plt.cm.viridis)
         self.active_cmap.set_under('white')
 
+        self.spectrum_smoothing_mode = SmoothingMode.NONE
+        self.spectrum_smoothing_param = 2 #Propably it is for change
+        
         # --- System EVENT ---
         self._plots_update_callbacks: list[Callable[[], None]] = []
         self._status_change_callbacks: list[Callable[[str], None]] = []
@@ -340,3 +345,25 @@ class WorkspaceViewModel:
             
             self._notify_plots_update()
             self._notify_status_change(f"Zaktualizowano parametry dla {p.name}.")
+
+    def get_spectrum_data_for_plot(self, parabola_index: int):
+        parabola = self.parabolas_list[parabola_index]
+        energies = parabola.cached_spec_E
+        dnde = parabola.cached_spec_dNdE
+        
+        # Przetwarzanie i wygładzanie odbywa się w warstwie logiki!
+        if self.spectrum_smoothing_mode != SmoothingMode.NONE:
+            dnde = apply_spectrum_smoothing(dnde, mode=self.spectrum_smoothing_mode, param=self.spectrum_smoothing_param)
+            
+        return energies, dnde
+
+    def set_spectrum_smoothing(self, mode: SmoothingMode):
+        self.spectrum_smoothing_mode = mode
+
+        if mode == SmoothingMode.SAVGOL:
+            self.spectrum_smoothing_param = 11.0
+        elif mode == SmoothingMode.GAUSSIAN:
+            self.spectrum_smoothing_param = 2.0
+
+        self._notify_status_change(f"Zmieniono wygładzanie widma na: {mode.name}")
+        self._notify_plots_update()

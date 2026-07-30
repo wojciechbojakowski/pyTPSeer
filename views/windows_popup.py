@@ -3,7 +3,7 @@ import customtkinter as ctk
 from tkinter import filedialog
 from viewmodels.workspace_vm import WorkspaceViewModel
 from models.parabola_config import ParabolaConfig
-from models.sampling_mode import SamplingMode
+from models.sampling_mode import SamplingMode, SmoothingMode
 from config import PIXELS_PER_MM
 
 # =========================================================================
@@ -304,15 +304,15 @@ class ParabolaConfigPopup(ctk.CTkToplevel):
         self.combo_sampling.set(SamplingMode.QUADRATIC.label)
         self.combo_sampling.pack(side="right", fill="x", expand=True)
 
-        self.row_power = ctk.CTkFrame(self.main_frame, fg_color="transparent")
-        ctk.CTkLabel(self.row_power, text="Wykładnik potęgi (p):", anchor="w", width=140).pack(side="left")
-        self.entry_power = ctk.CTkEntry(self.row_power, placeholder_text="2.0", height=26)
-        self.entry_power.insert(0, str(getattr(self.vm.parabolas_list[self.edit_index], 'power_exponent', 2.0) if self.edit_index is not None else 2.0))
-        self.entry_power.pack(side="right", fill="x", expand=True)
-        
-        self.combo_sampling.configure(command=self._on_sampling_changed)
-        self._on_sampling_changed(self.combo_sampling.get())
-        
+        self.entry_power = self._add_form_row("potęga:", "2")
+
+        enum_values = [mode.label for mode in SmoothingMode]
+
+        self.seg_smooth = ctk.CTkSegmentedButton(
+            self.main_frame,
+            values=enum_values,
+        )
+
         # --- PRZYCISKI AKCJI ---
         self.btn_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
         self.btn_frame.pack(fill="x", pady=(25, 0))
@@ -353,7 +353,7 @@ class ParabolaConfigPopup(ctk.CTkToplevel):
             E_max = float(self.entry_E_max.get().strip() if self.entry_E_max.get().strip() else 10.0)
             
             sampling_mode = SamplingMode.from_label(self.combo_sampling.get())
-            gamma = int(self.entry_power.get().strip() if self.entry_power.get().strip() else 2)
+            gamma = float(self.entry_power.get().strip() if self.entry_power.get().strip() else 2)
 
             if self.edit_index is not None:
                 #EDITION MODE

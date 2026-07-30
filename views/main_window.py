@@ -111,17 +111,15 @@ class MainWindow(ctk.CTk):
             # MCP
             if p.cached_line_x is not None:
                 self.plot_frame.draw_parabola_overlay(p.cached_line_x, p.cached_line_y, color, p.name)
-                print(f"LOG 110 {idx}")
             
             # Energy
             if p.cached_spec_E is not None and len(p.cached_spec_E) > 0:
-                self.spectrum_frame.plot_series(p.cached_spec_E, p.cached_spec_dNdE, color, p.name, draw_points=True)
-                print(f"LOG 115 {idx}")
+                E, dnde = self.vm.get_spectrum_data_for_plot(idx)
+                self.spectrum_frame.plot_series(E, dnde, color, p.name, draw_points=True)
 
             #TOF
             if p.cached_tof_t is not None and len(p.cached_tof_t) > 0:
                 self.tof_frame.plot_series(p.cached_tof_t, p.cached_tof_signal, color, p.name, draw_points=False)
-                print(f"LOG 138 {idx}")
 
         self.spectrum_frame.finalize_plot()
         

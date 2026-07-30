@@ -37,6 +37,7 @@ ADD place for change px/mm -> DONE
 ADD smoothing and change in number of points
 ADD changing energy figure -> done -> for tests
 
+Add smoothing metods to ploting energies -> DONE but I am not proud of it
 
 NOTE:
 - rotation is made by operation on NDArray so it is fairly quick

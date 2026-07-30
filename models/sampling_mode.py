@@ -21,3 +21,27 @@ class SamplingMode(Enum):
             if mode.label == label:
                 return mode
         return cls.QUADRATIC #DEFAULT
+
+
+class SmoothingMode(Enum):
+    NONE = 0
+    SAVGOL = 1
+    GAUSSIAN = 2
+
+    @property
+    def label(self) -> str:
+        """Etykieta wyświetlana w GUI (CTkSegmentedButton)."""
+        labels = {
+            SmoothingMode.NONE: "Brak",
+            SmoothingMode.SAVGOL: "Savitzky-Golay",
+            SmoothingMode.GAUSSIAN: "Gauss"
+        }
+        return labels[self]
+
+    @classmethod
+    def from_label(cls, label: str):
+        """Konwersja z tekstu z przycisku GUI na wartość Enuma."""
+        for mode in cls:
+            if mode.label == label:
+                return mode
+        return cls.NONE
