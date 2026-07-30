@@ -39,6 +39,16 @@ ADD changing energy figure -> done -> for tests
 
 Add smoothing metods to ploting energies -> DONE but I am not proud of it
 
+zapis ascii dodać energie i kąt -> done
+przypinanie parabol -> weird
+
+energia max dla każdego pliku z 28,29 .05 z parabol proton
+
+ograniczyć ilość kolorów na skali do 20 barw -> done
+
+Dynamiczna modyfikacja samplingu
+Dodanie okna do debbugingu
+
 NOTE:
 - rotation is made by operation on NDArray so it is fairly quick
 - rotation paramter is not realy global parameter but it is connected to one parabola

@@ -24,7 +24,7 @@ class WorkspaceViewModel:
         # --- (UI STATE) ---
         self.is_selecting_start: bool = False
 
-        self.active_cmap=copy.copy(plt.cm.viridis)
+        self.active_cmap=copy.copy(plt.cm.turbo)
         self.active_cmap.set_under('white')
 
         self.spectrum_smoothing_mode = SmoothingMode.NONE
@@ -249,12 +249,11 @@ class WorkspaceViewModel:
                 # 1. Zapis aktywnych trajektorii
                 for p in self.parabolas_list:
                     if p.cached_spec_E is not None and len(p.cached_spec_E) > 0:
-                        f.write(f"# --- Trajektoria: {p.name} (A={p.A}, Q={p.Q}) ---\n")
+                        f.write(f"# --- Trajektoria: {p.name} (A={p.A}, Q={p.Q}, kat={p.rotation_parameter}, E_max={p.E_max}[MeV], E_min={p.E_min}[MeV]) ---\n")
                         f.write("# E_MeV_u\tdNdE_MeV1_sr1\n")
                         for e_val, dnde_val in zip(p.cached_spec_E, p.cached_spec_dNdE):
                             f.write(f"{e_val:.6e}\t{dnde_val:.6e}\n")
                         f.write("\n")
-
                 # 2. Zapis przypiętych widm referencyjnych (jeśli istnieją)
                 if self.pinned_spectra:
                     f.write("# ==================================================\n")

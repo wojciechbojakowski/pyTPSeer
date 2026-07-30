@@ -99,7 +99,12 @@ class MCPCanvas(BasePlotCanvas):
         self.ax.clear()
         self._apply_dark_theme_styles()
 
-        im = self.ax.imshow(img_matrix, cmap=cmap, extent=extent_sizes, vmin=1e-6)
+        if isinstance(cmap, str):
+            quantized_cmap = plt.colormaps[cmap].resampled(20)
+        else:
+            quantized_cmap = cmap.resampled(20)
+
+        im = self.ax.imshow(img_matrix, cmap=quantized_cmap, extent=extent_sizes, vmin=1e-6)
         self.ax.set_xlabel("X [m]")
         self.ax.set_ylabel("Y [m]")
         
